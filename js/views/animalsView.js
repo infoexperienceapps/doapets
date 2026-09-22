@@ -6,22 +6,25 @@ export function renderAnimalsView(container, onNavigate) {
   const user = store.getState().currentUser;
   
   const allAnimals = store.getState().animals;
-  const animals = isAdmin 
+  // Decrescente: o mais novo cadastrado aparece no topo
+  const animals = (isAdmin 
     ? allAnimals 
-    : allAnimals.filter(pet => pet.status === 'Disponível' || pet.status === 'Aprovado');
+    : allAnimals.filter(pet => pet.status === 'Disponível' || pet.status === 'Aprovado')
+  ).slice().reverse();
 
   container.innerHTML = `
     <div class="home-top-bar">
       <div>
         <h2 class="home-top-title">Todos os Animais</h2>
-        <span style="font-size: 12px; color: var(--text-muted);">${animals.length} cadastrados na ONG</span>
+        <span style="font-size: 12px; color: var(--text-muted);">${animals.length} disponíveis para adoção</span>
       </div>
       ${!isGuest ? `
         <button class="btn-add-pet" id="btn-open-add-pet-animals" title="Cadastrar animal">+</button>
       ` : ''}
     </div>
 
-    <div id="pets-container-animals">
+    <!-- Lista Decrescente com foto oval menor e informações à direita -->
+    <div id="pets-container-animals" style="overflow-y: auto; padding-bottom: 10px;">
       ${animals.length === 0 ? `
         <div class="empty-pets-notice">
           <p>Nenhum animal publicado no momento.</p>
@@ -34,34 +37,63 @@ export function renderAnimalsView(container, onNavigate) {
           `}
         </div>
       ` : `
-        ${animals.map(pet => `
-          <div class="pet-full-card">
-            <div class="pet-card-image-box">
-              <img src="${pet.photoUrl}" alt="${pet.name}" loading="lazy">
-              <span class="pet-card-badge">${pet.status || 'Disponível'}</span>
-            </div>
-            <div class="pet-card-content">
-              <h3 class="pet-card-name">${pet.name}</h3>
-              <div class="pet-card-tags">${pet.species} • ${pet.age} • ${pet.sex} • Porte ${pet.size}</div>
-              <p class="pet-card-desc">${pet.description}</p>
-              <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 10px;">
-                Cadastrado por: <strong>${pet.ownerName || 'ONG DoaPets'}</strong>
+        ${animals.map((pet, index) => {
+          const isFromOng = (pet.ownerName || '').toLowerCase().includes('ong') || 
+                            (pet.ownerName || '').toLowerCase().includes('doapets') ||
+                            (pet.ownerEmail || '').toLowerCase().includes('ong3');
+          return `
+            <div class="pet-horizontal-card" data-pet-idx="${index}">
+              <img src="${pet.photoUrl}" class="pet-oval-avatar" alt="${pet.name}" loading="lazy">
+              
+              <div class="pet-card-right-info">
+                <div class="pet-card-right-header">
+                  <span class="pet-card-right-name">${pet.name}</span>
+                  <span class="pet-card-right-badge">${pet.status || 'Disponível'}</span>
+                </div>
+                <div class="pet-card-right-meta">
+                  ${pet.species} • ${pet.age} • Porte ${pet.size}
+                </div>
+                <div class="pet-card-right-author">
+                  Publicado por:
+                  ${isFromOng 
+                    ? `<span class="author-tag-ong">👑 ONG (ong3)</span>` 
+                    : `<span class="author-tag-user">👤 ${pet.ownerName || 'Tutor'}</span>`
+                  }
+                </div>
+                <div style="font-size: 11px; color: var(--color-primary); font-weight: 700; margin-top: 4px;">
+                  🔍 Toque para ver detalhes
+                </div>
               </div>
-              <button class="btn-send-request btn-request-adopt" data-pet-name="${pet.name}" style="margin-top:0;">
-                Solicitar Adoção de ${pet.name}
-              </button>
             </div>
-          </div>
-        `).join('')}
+          `;
+        }).join('')}
       `}
     </div>
 
-    <!-- Modal Adicionar Animal com CSS robusto, alinhado e 100% formatado -->
+    <!-- POPUP DETALHADO DO ANIMAL AO CLICAR -->
+    <div id="modal-pet-details" class="modal-backdrop" style="display: none;">
+      <div class="modal-sheet">
+        <div class="modal-header">
+          <h3 id="detail-pet-name">🐾 Detalhes do Animal</h3>
+          <button class="modal-close-btn" id="btn-close-pet-details">✕</button>
+        </div>
+        
+        <div id="detail-pet-body" style="max-height: 400px; overflow-y: auto;">
+          <!-- Renderizado via JS com todas as informações -->
+        </div>
+
+        <button type="button" class="btn-send-request" id="btn-adopt-from-modal" style="margin-top: 14px;">
+          Quero Adotar Este Pet
+        </button>
+      </div>
+    </div>
+
+    <!-- Modal Adicionar Animal -->
     ${!isGuest ? `
       <div id="modal-add-pet-animals" class="modal-backdrop" style="display: none;">
         <div class="modal-sheet">
           <div class="modal-header">
-            <h3>Cadastrar Animal</h3>
+            <h3>Cadastrar Animal para Adoção</h3>
             <button class="modal-close-btn" id="btn-close-pet-modal-animals">✕</button>
           </div>
           <form id="form-new-pet-animals">
@@ -119,6 +151,67 @@ export function renderAnimalsView(container, onNavigate) {
     ` : ''}
   `;
 
+  // Interatividade do Pop-up de Detalhes do Pet
+  const modalDetail = container.querySelector('#modal-pet-details');
+  const btnCloseDetail = container.querySelector('#btn-close-pet-details');
+  const btnAdoptModal = container.querySelector('#btn-adopt-from-modal');
+  const detailTitle = container.querySelector('#detail-pet-name');
+  const detailBody = container.querySelector('#detail-pet-body');
+
+  let selectedPetName = '';
+
+  container.querySelectorAll('.pet-horizontal-card').forEach(card => {
+    card.addEventListener('click', () => {
+      const idx = card.dataset.petIdx;
+      const pet = animals[idx];
+      if (!pet) return;
+
+      selectedPetName = pet.name;
+      const isFromOng = (pet.ownerName || '').toLowerCase().includes('ong') || 
+                        (pet.ownerName || '').toLowerCase().includes('doapets') ||
+                        (pet.ownerEmail || '').toLowerCase().includes('ong3');
+
+      detailTitle.textContent = `🐾 ${pet.name}`;
+      detailBody.innerHTML = `
+        <div style="text-align: center; margin-bottom: 12px;">
+          <img src="${pet.photoUrl}" style="width: 100%; max-height: 220px; object-fit: cover; border-radius: var(--radius-md);" alt="${pet.name}">
+        </div>
+
+        <div style="background: #FDF8F5; border: 1px solid var(--border-light); border-radius: var(--radius-sm); padding: 12px; margin-bottom: 12px;">
+          <div style="font-size: 13px; margin-bottom: 4px;"><strong>Espécie e Sexo:</strong> ${pet.species} • ${pet.sex}</div>
+          <div style="font-size: 13px; margin-bottom: 4px;"><strong>Idade e Porte:</strong> ${pet.age} • Porte ${pet.size}</div>
+          <div style="font-size: 13px; margin-bottom: 4px;"><strong>Status:</strong> ${pet.status || 'Disponível'}</div>
+          <div style="font-size: 13px;">
+            <strong>Cadastrado por:</strong> 
+            ${isFromOng 
+              ? `<span class="author-tag-ong">👑 ONG (ong3)</span>` 
+              : `<span class="author-tag-user">👤 ${pet.ownerName || 'Tutor Cadastrado'}</span>`
+            }
+          </div>
+        </div>
+
+        <div style="font-size: 13px; color: var(--text-main); line-height: 1.5; padding: 0 4px;">
+          <strong>Histórico e Cuidados:</strong><br>
+          ${pet.description}
+        </div>
+      `;
+
+      modalDetail.style.display = 'flex';
+    });
+  });
+
+  if (btnCloseDetail) {
+    btnCloseDetail.addEventListener('click', () => modalDetail.style.display = 'none');
+  }
+
+  if (btnAdoptModal) {
+    btnAdoptModal.addEventListener('click', () => {
+      modalDetail.style.display = 'none';
+      if (onNavigate) onNavigate('requests');
+    });
+  }
+
+  // Modal Adicionar Pet
   const modal = container.querySelector('#modal-add-pet-animals');
   const btnOpen = container.querySelector('#btn-open-add-pet-animals');
   const btnEmpty = container.querySelector('#btn-empty-add-animals');
@@ -148,18 +241,14 @@ export function renderAnimalsView(container, onNavigate) {
         description: container.querySelector('#pet-desc-a').value.trim(),
         status: statusInicial,
         ownerEmail: user ? user.email : '',
-        ownerName: user ? user.name : 'ONG DoaPets',
+        ownerName: isAdmin ? 'ONG DoaPets (ong3)' : (user ? user.name : 'Tutor'),
         date: new Date().toLocaleDateString('pt-BR')
       };
 
       store.addAnimal(newAnimal);
       closeM();
-      alert(isAdmin ? "Animal publicado com sucesso!" : "Animal cadastrado! Ele já está visível no seu Perfil e aguarda autorização da ONG para aparecer na lista pública.");
+      alert(isAdmin ? "Animal publicado com sucesso!" : "Animal cadastrado! Ele já está no seu Perfil e aguarda aprovação da ONG.");
       renderAnimalsView(container, onNavigate);
     });
   }
-
-  container.querySelectorAll('.btn-request-adopt').forEach(btn => {
-    btn.addEventListener('click', () => onNavigate('requests'));
-  });
 }

@@ -7,15 +7,12 @@ export function renderRequestsView(container, onNavigate) {
   const requests = store.getState().requests;
   const animals = store.getState().animals;
 
-  // VISÃO 1: ADMINISTRADORES (ong3, Doapets e Oscar3)
+  // VISÃO 1: ADMINISTRADORES (ong3, Doapets e Oscar3) COM SEÇÕES MINIMIZÁVEIS
   if (isAdmin) {
     const pendingPets = animals.filter(pet => pet.status === 'Pendente de Aprovação');
-    
-    // Separa os pedidos ativos dos recusados
     const activeRequests = requests.filter(r => r.status !== 'Recusado');
     const rejectedRequests = requests.filter(r => r.status === 'Recusado');
 
-    // Função para contar tentativas de um mesmo usuário (por e-mail ou CPF)
     const countAttempts = (identifier) => {
       if (!identifier) return 1;
       return requests.filter(r => r.userEmail === identifier || (r.userCpf && r.userCpf === identifier)).length;
@@ -29,108 +26,122 @@ export function renderRequestsView(container, onNavigate) {
         </button>
       </div>
 
-      <!-- Pets aguardando aprovação -->
-      <h3 style="font-size: 16px; font-weight: 800; margin-bottom: 10px; color: var(--color-primary-dark);">
-        🐾 Animais Aguardando Autorização da ONG (${pendingPets.length})
-      </h3>
-      
-      ${pendingPets.length === 0 ? `
-        <div style="background: var(--bg-surface); border: 1px dashed var(--border-light); border-radius: var(--radius-sm); padding: 12px; text-align: center; color: var(--text-muted); font-size: 12px; margin-bottom: 18px;">
-          Nenhum animal pendente de autorização no momento.
+      <!-- 1. SEÇÃO MINIMIZÁVEL: Animais Aguardando Autorização da ONG -->
+      <div class="accordion-item" id="acc-pending-pets" style="margin-bottom: 12px; border-radius: var(--radius-md); border: 1px solid var(--border-light); background: var(--bg-surface); overflow: hidden; box-shadow: var(--shadow-card);">
+        <div class="accordion-header" id="header-pending-pets" style="padding: 14px 16px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; user-select: none;">
+          <div style="font-size: 14px; font-weight: 800; color: var(--color-primary-dark);">
+            🐾 Animais Aguardando Autorização (${pendingPets.length})
+          </div>
+          <span class="accordion-arrow" id="arrow-pending-pets" style="font-size: 12px; color: var(--text-muted); transition: transform 0.25s ease;">▼</span>
         </div>
-      ` : `
-        <div style="margin-bottom: 20px;">
-          ${pendingPets.map(p => `
-            <div class="request-card">
-              <div class="request-card-header">
-                <span class="request-pet-name">🐾 ${p.name} (${p.species}, ${p.age})</span>
-                <span class="status-badge status-pendente">Aguardando Avaliação</span>
-              </div>
-              <div class="request-detail-line"><strong>Cadastrado por:</strong> ${p.ownerName} (${p.ownerEmail})</div>
-              <div class="request-detail-line"><strong>Porte / Sexo:</strong> ${p.size} • ${p.sex}</div>
-              <div class="request-detail-line"><strong>Descrição:</strong> ${p.description}</div>
-              <div class="admin-actions-bar">
-                <button class="btn-status-action btn-approve btn-approve-pet" data-id="${p.id}">
-                  ✓ Autorizar e Publicar no App
-                </button>
-                <button class="btn-status-action btn-reject btn-reject-pet" data-id="${p.id}">
-                  ✕ Recusar Publicação
-                </button>
-              </div>
+        
+        <div class="accordion-content" id="content-pending-pets" style="display: none; padding: 0 14px 14px; border-top: 1px dashed var(--border-light);">
+          ${pendingPets.length === 0 ? `
+            <div style="padding: 12px; text-align: center; color: var(--text-muted); font-size: 12px;">
+              Nenhum animal pendente de autorização no momento.
             </div>
-          `).join('')}
-        </div>
-      `}
-
-      <!-- Fila de Pedidos Ativos -->
-      <h3 style="font-size: 16px; font-weight: 800; margin-bottom: 10px; color: var(--text-main);">
-        📋 Solicitações de Tutores em Aberto (${activeRequests.length})
-      </h3>
-
-      ${activeRequests.length === 0 ? `
-        <div style="text-align: center; padding: 30px 16px; color: var(--text-muted); font-size: 12px;">
-          Nenhuma solicitação pendente no momento.
-        </div>
-      ` : `
-        <div>
-          ${activeRequests.map(req => {
-            const totalTentativas = countAttempts(req.userEmail);
-            return `
-              <div class="request-card">
-                <div class="request-card-header">
-                  <span class="request-pet-name">${req.type === 'Castração' ? '✂️ Castração: ' : '🐾 Adoção: '}${req.petName}</span>
-                  <span class="status-badge status-${req.status.toLowerCase().replace(' ', '-')}">
-                    ${req.status}
-                  </span>
-                </div>
-
-                <div style="background: #FDF8F5; border: 1px solid var(--border-light); border-left: 4px solid var(--color-primary); border-radius: var(--radius-sm); padding: 10px 12px; margin-bottom: 10px; font-size: 12px;">
-                  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 4px;">
-                    <span style="font-weight: 800; color: var(--color-primary-dark);">👤 SOLICITANTE:</span>
-                    <span style="background: #E9ECEF; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 700;">
-                      📊 Tentativa #${totalTentativas}
-                    </span>
+          ` : `
+            <div style="margin-top: 10px;">
+              ${pendingPets.map(p => `
+                <div class="request-card" style="margin-bottom: 10px;">
+                  <div class="request-card-header">
+                    <span class="request-pet-name">🐾 ${p.name} (${p.species}, ${p.age})</span>
+                    <span class="status-badge status-pendente">Aguardando Avaliação</span>
                   </div>
-                  <div><strong>Nome Completo:</strong> ${req.userName}</div>
-                  <div><strong>CPF:</strong> ${req.userCpf || 'Não informado'}</div>
-                  <div><strong>Telefone Contato:</strong> <span style="color: #2A9D8F; font-weight: 700;">${req.userPhone}</span></div>
-                  <div><strong>Endereço:</strong> ${req.userAddress || 'Não informado'}, ${req.userCity}</div>
-                </div>
-
-                ${req.type === 'Castração' ? `
-                  <div style="background: #FFF3E6; padding: 8px 12px; border-radius: var(--radius-sm); margin-bottom: 10px; font-size: 12px; color: var(--color-primary-dark);">
-                    <strong>Modalidade:</strong> Castração Gratuita / Social<br>
-                    <strong>Espécie e Sexo:</strong> ${req.species} • ${req.sex} (${req.weight || 'Peso não inf.'})<br>
-                    <strong>Situação:</strong> ${req.animalSituation}
+                  <div class="request-detail-line"><strong>Cadastrado por:</strong> ${p.ownerName} (${p.ownerEmail})</div>
+                  <div class="request-detail-line"><strong>Porte / Sexo:</strong> ${p.size} • ${p.sex}</div>
+                  <div class="request-detail-line"><strong>Descrição:</strong> ${p.description}</div>
+                  <div class="admin-actions-bar">
+                    <button class="btn-status-action btn-approve btn-approve-pet" data-id="${p.id}">
+                      ✓ Autorizar e Publicar no App
+                    </button>
+                    <button class="btn-status-action btn-reject btn-reject-pet" data-id="${p.id}">
+                      ✕ Recusar Publicação
+                    </button>
                   </div>
-                ` : `
-                  <div style="background: ${req.isEligible === 'Sim' ? '#E8F5E9' : '#FFEBEE'}; padding: 8px 12px; border-radius: var(--radius-sm); margin-bottom: 10px; font-size: 12px;">
-                    <strong>Autodeclaração de Aptidão:</strong> ${req.isEligible === 'Sim' ? '✅ Apto' : '⚠️ Não Apto'}<br>
-                    <strong>Consentimento de Consulta:</strong> ${req.dataConsent ? '✅ Autorizado' : '❌ Não autorizou'}
-                  </div>
-                  <div class="request-detail-line"><strong>Tipo de Imóvel:</strong> ${req.housingType}</div>
-                  <div class="request-detail-line"><strong>Outros Animais:</strong> ${req.hasOtherPets}</div>
-                `}
-
-                <div class="request-detail-line"><strong>Observações:</strong> ${req.experience || req.notes || 'Sem observações'}</div>
-                <div class="request-detail-line"><strong>Data:</strong> ${req.date}</div>
-
-                <div class="admin-actions-bar">
-                  <button class="btn-status-action btn-review" data-action="Em Análise" data-id="${req.id}">
-                    Colocar Em Análise
-                  </button>
-                  <button class="btn-status-action btn-approve" data-action="Aprovado" data-id="${req.id}">
-                    ✓ Aprovar Pedido
-                  </button>
-                  <button class="btn-status-action btn-reject" data-action="Recusado" data-id="${req.id}">
-                    ✕ Recusar (Mover para Não Aprovados)
-                  </button>
                 </div>
-              </div>
-            `;
-          }).join('')}
+              `).join('')}
+            </div>
+          `}
         </div>
-      `}
+      </div>
+
+      <!-- 2. SEÇÃO MINIMIZÁVEL: Solicitações de Tutores em Aberto -->
+      <div class="accordion-item active" id="acc-active-requests" style="margin-bottom: 12px; border-radius: var(--radius-md); border: 1px solid var(--border-light); background: var(--bg-surface); overflow: hidden; box-shadow: var(--shadow-card);">
+        <div class="accordion-header" id="header-active-requests" style="padding: 14px 16px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; user-select: none;">
+          <div style="font-size: 14px; font-weight: 800; color: var(--text-main);">
+            📋 Solicitações de Tutores (${activeRequests.length})
+          </div>
+          <span class="accordion-arrow" id="arrow-active-requests" style="font-size: 12px; color: var(--text-muted); transform: rotate(180deg); transition: transform 0.25s ease;">▼</span>
+        </div>
+        
+        <div class="accordion-content" id="content-active-requests" style="display: block; padding: 0 14px 14px; border-top: 1px dashed var(--border-light);">
+          ${activeRequests.length === 0 ? `
+            <div style="padding: 14px; text-align: center; color: var(--text-muted); font-size: 12px;">
+              Nenhuma solicitação pendente no momento.
+            </div>
+          ` : `
+            <div style="margin-top: 10px;">
+              ${activeRequests.map(req => {
+                const totalTentativas = countAttempts(req.userEmail);
+                return `
+                  <div class="request-card" style="margin-bottom: 10px;">
+                    <div class="request-card-header">
+                      <span class="request-pet-name">${req.type === 'Castração' ? '✂️ Castração: ' : '🐾 Adoção: '}${req.petName}</span>
+                      <span class="status-badge status-${req.status.toLowerCase().replace(' ', '-')}">
+                        ${req.status}
+                      </span>
+                    </div>
+
+                    <div style="background: #FDF8F5; border: 1px solid var(--border-light); border-left: 4px solid var(--color-primary); border-radius: var(--radius-sm); padding: 10px 12px; margin-bottom: 10px; font-size: 12px;">
+                      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 4px;">
+                        <span style="font-weight: 800; color: var(--color-primary-dark);">👤 SOLICITANTE:</span>
+                        <span style="background: #E9ECEF; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 700;">
+                          📊 Tentativa #${totalTentativas}
+                        </span>
+                      </div>
+                      <div><strong>Nome Completo:</strong> ${req.userName}</div>
+                      <div><strong>CPF:</strong> ${req.userCpf || 'Não informado'}</div>
+                      <div><strong>Telefone Contato:</strong> <span style="color: #2A9D8F; font-weight: 700;">${req.userPhone}</span></div>
+                      <div><strong>Endereço:</strong> ${req.userAddress || 'Não informado'}, ${req.userCity}</div>
+                    </div>
+
+                    ${req.type === 'Castração' ? `
+                      <div style="background: #FFF3E6; padding: 8px 12px; border-radius: var(--radius-sm); margin-bottom: 10px; font-size: 12px; color: var(--color-primary-dark);">
+                        <strong>Modalidade:</strong> Castração Gratuita / Social<br>
+                        <strong>Espécie e Sexo:</strong> ${req.species} • ${req.sex} (${req.weight || 'Peso não inf.'})<br>
+                        <strong>Situação:</strong> ${req.animalSituation}
+                      </div>
+                    ` : `
+                      <div style="background: ${req.isEligible === 'Sim' ? '#E8F5E9' : '#FFEBEE'}; padding: 8px 12px; border-radius: var(--radius-sm); margin-bottom: 10px; font-size: 12px;">
+                        <strong>Autodeclaração de Aptidão:</strong> ${req.isEligible === 'Sim' ? '✅ Apto' : '⚠️ Não Apto'}<br>
+                        <strong>Consentimento de Consulta:</strong> ${req.dataConsent ? '✅ Autorizado' : '❌ Não autorizou'}
+                      </div>
+                      <div class="request-detail-line"><strong>Tipo de Imóvel:</strong> ${req.housingType}</div>
+                      <div class="request-detail-line"><strong>Outros Animais:</strong> ${req.hasOtherPets}</div>
+                    `}
+
+                    <div class="request-detail-line"><strong>Observações:</strong> ${req.experience || req.notes || 'Sem observações'}</div>
+                    <div class="request-detail-line"><strong>Data:</strong> ${req.date}</div>
+
+                    <div class="admin-actions-bar">
+                      <button class="btn-status-action btn-review" data-action="Em Análise" data-id="${req.id}">
+                        Colocar Em Análise
+                      </button>
+                      <button class="btn-status-action btn-approve" data-action="Aprovado" data-id="${req.id}">
+                        ✓ Aprovar Pedido
+                      </button>
+                      <button class="btn-status-action btn-reject" data-action="Recusado" data-id="${req.id}">
+                        ✕ Recusar (Mover p/ Recusados)
+                      </button>
+                    </div>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          `}
+        </div>
+      </div>
 
       <!-- POPUP / MODAL NO CANTO SUPERIOR DIREITO: LISTA DE NÃO APROVADOS & TENTATIVAS -->
       <div id="modal-rejected-popup" class="modal-backdrop" style="display: none;">
@@ -140,7 +151,7 @@ export function renderRequestsView(container, onNavigate) {
             <button class="modal-close-btn" id="btn-close-rejected-popup">✕</button>
           </div>
           <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px;">
-            Abaixo estão os solicitantes reprovados e o histórico de quantas tentativas cada um já realizou.
+            Solicitantes reprovados e quantas tentativas cada um já realizou no sistema.
           </p>
           <div style="max-height: 380px; overflow-y: auto;">
             ${rejectedRequests.length === 0 ? `
@@ -176,7 +187,32 @@ export function renderRequestsView(container, onNavigate) {
       </div>
     `;
 
-    // Interatividade do Popup de Recusados
+    // Interatividade de Minimizar para a ONG
+    const headerPending = container.querySelector('#header-pending-pets');
+    const contentPending = container.querySelector('#content-pending-pets');
+    const arrowPending = container.querySelector('#arrow-pending-pets');
+
+    if (headerPending) {
+      headerPending.addEventListener('click', () => {
+        const isVisible = contentPending.style.display === 'block';
+        contentPending.style.display = isVisible ? 'none' : 'block';
+        arrowPending.style.transform = isVisible ? 'rotate(0deg)' : 'rotate(180deg)';
+      });
+    }
+
+    const headerActive = container.querySelector('#header-active-requests');
+    const contentActive = container.querySelector('#content-active-requests');
+    const arrowActive = container.querySelector('#arrow-active-requests');
+
+    if (headerActive) {
+      headerActive.addEventListener('click', () => {
+        const isVisible = contentActive.style.display === 'block';
+        contentActive.style.display = isVisible ? 'none' : 'block';
+        arrowActive.style.transform = isVisible ? 'rotate(0deg)' : 'rotate(180deg)';
+      });
+    }
+
+    // Modal Recusados
     const modalRejected = container.querySelector('#modal-rejected-popup');
     const btnOpenRejected = container.querySelector('#btn-open-rejected-popup');
     const btnCloseRejected = container.querySelector('#btn-close-rejected-popup');
@@ -184,7 +220,7 @@ export function renderRequestsView(container, onNavigate) {
     if (btnOpenRejected && modalRejected) btnOpenRejected.addEventListener('click', () => modalRejected.style.display = 'flex');
     if (btnCloseRejected && modalRejected) btnCloseRejected.addEventListener('click', () => modalRejected.style.display = 'none');
 
-    // Ações para autorizar/recusar pets
+    // Ações de autorizar/recusar pets
     container.querySelectorAll('.btn-approve-pet').forEach(btn => {
       btn.addEventListener('click', () => {
         store.updateAnimalStatus(btn.dataset.id, 'Disponível');
@@ -201,7 +237,7 @@ export function renderRequestsView(container, onNavigate) {
       });
     });
 
-    // Ações de triagem (Aprovar, Análise ou Recusar)
+    // Ações de triagem
     container.querySelectorAll('.btn-status-action:not(.btn-approve-pet):not(.btn-reject-pet)').forEach(btn => {
       btn.addEventListener('click', () => {
         const id = btn.dataset.id;

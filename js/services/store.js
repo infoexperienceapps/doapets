@@ -5,21 +5,35 @@
     const savedAnimals = localStorage.getItem('doapets_animals');
     const savedNews = localStorage.getItem('doapets_news');
 
+    let initialNews = savedNews ? JSON.parse(savedNews) : [
+      {
+        id: "news-1",
+        title: "Campanha de Vacinação e Adoção",
+        content: "Atendimento com a equipe voluntária na Praça Central. Venha conhecer nossos resgatados!",
+        date: "14/09/2026",
+        eventDate: "2026-09-26",
+        eventTime: "09:00 às 15:00",
+        author: "DoaPets Oficial"
+      }
+    ];
+
+    // Auto-exclusão: filtra campanhas expiradas (mais de 1 dia após o evento)
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    initialNews = initialNews.filter(item => {
+      if (!item.eventDate) return true;
+      const eventD = new Date(item.eventDate + 'T23:59:59');
+      // Adiciona 1 dia de tolerância após a data do evento
+      eventD.setDate(eventD.getDate() + 1);
+      return today <= eventD;
+    });
+
     this.state = {
       currentUser: savedUser ? JSON.parse(savedUser) : null,
       requests: savedRequests ? JSON.parse(savedRequests) : [],
       animals: savedAnimals ? JSON.parse(savedAnimals) : [],
-      news: savedNews ? JSON.parse(savedNews) : [
-        {
-          id: "news-1",
-          title: "Campanha de Vacinação e Adoção",
-          content: "Atendimento com a equipe voluntária na Praça Central. Venha conhecer nossos resgatados!",
-          date: "14/09/2026",
-          eventDate: "2026-09-26",
-          eventTime: "09:00 às 15:00",
-          author: "DoaPets Oficial"
-        }
-      ]
+      news: initialNews
     };
     this.listeners = [];
   }
