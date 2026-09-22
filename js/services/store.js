@@ -13,8 +13,10 @@
         {
           id: "news-1",
           title: "Campanha de Vacinação e Adoção",
-          content: "Neste sábado teremos atendimento com a equipe voluntária. Venha conhecer nossos resgatados!",
+          content: "Atendimento com a equipe voluntária na Praça Central. Venha conhecer nossos resgatados!",
           date: "14/09/2026",
+          eventDate: "2026-09-26",
+          eventTime: "09:00 às 15:00",
           author: "DoaPets Oficial"
         }
       ]
@@ -26,8 +28,6 @@
     if (!this.state.currentUser || this.isGuest()) return false;
     const name = (this.state.currentUser.name || "").toLowerCase().trim();
     const email = (this.state.currentUser.email || "").toLowerCase().trim();
-    
-    // Reconhecimento prioritário oficial: Doapets, Oscar3, ong3 e 0ng3
     return name.includes("doapets") || name.includes("oscar3") || name.includes("ong3") || name.includes("0ng3") ||
            email.includes("doapets") || email.includes("oscar3") || email.includes("ong3") || email.includes("0ng3");
   }

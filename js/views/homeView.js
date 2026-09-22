@@ -22,7 +22,7 @@ export function renderHomeView(container, onNavigate) {
       </div>
       <div style="display: flex; gap: 8px;">
         ${isAdmin ? `
-          <button class="btn-add-pet" id="btn-open-news" title="Adicionar Notícia/Aviso" style="background: #2B2D42;">📢</button>
+          <button class="btn-add-pet" id="btn-open-news" title="Adicionar Notícia/Campanha" style="background: #2B2D42;">📢</button>
         ` : ''}
         ${!isGuest ? `
           <button class="btn-add-pet" id="btn-open-add-pet" title="Cadastrar animal">+</button>
@@ -39,19 +39,24 @@ export function renderHomeView(container, onNavigate) {
       </button>
     </div>
 
-    <!-- Mural de Notícias -->
+    <!-- Mural de Notícias / Campanhas com Calendário interativo -->
     ${newsList.length > 0 ? `
       <div class="home-top-bar" style="margin-bottom: 8px;">
-        <h3 style="font-size: 15px; font-weight: 800; color: var(--text-main);">Informativos da ONG 📢</h3>
+        <h3 style="font-size: 15px; font-weight: 800; color: var(--text-main);">Campanhas & Informativos da ONG 📢</h3>
       </div>
       <div style="margin-bottom: 18px;">
-        ${newsList.map(n => `
-          <div style="background: var(--bg-surface); border: 1px solid var(--border-light); border-left: 4px solid var(--color-primary); border-radius: var(--radius-sm); padding: 12px 14px; margin-bottom: 8px; box-shadow: var(--shadow-card);">
+        ${newsList.map((n, index) => `
+          <div class="news-card-item" data-index="${index}" style="background: var(--bg-surface); border: 1px solid var(--border-light); border-left: 4px solid var(--color-primary); border-radius: var(--radius-sm); padding: 12px 14px; margin-bottom: 8px; box-shadow: var(--shadow-card); cursor: pointer; transition: transform 0.15s ease;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
               <strong style="font-size: 13px; color: var(--text-main);">${n.title}</strong>
-              <span style="font-size: 10px; color: var(--text-muted);">${n.date}</span>
+              <span style="background: #FFF3E6; color: var(--color-primary-dark); font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: var(--radius-full); display: flex; align-items: center; gap: 3px;">
+                📅 Ver Data
+              </span>
             </div>
-            <p style="font-size: 12px; color: var(--text-muted); line-height: 1.4;">${n.content}</p>
+            <p style="font-size: 12px; color: var(--text-muted); line-height: 1.4; margin-bottom: 4px;">${n.content}</p>
+            <div style="font-size: 11px; color: var(--color-primary); font-weight: 700;">
+              🗓️ Toque para abrir no calendário oficial da campanha
+            </div>
           </div>
         `).join('')}
       </div>
@@ -93,6 +98,24 @@ export function renderHomeView(container, onNavigate) {
       `}
     </div>
 
+    <!-- POPUP DO CALENDÁRIO DA CAMPANHA -->
+    <div id="modal-campaign-calendar" class="modal-backdrop" style="display: none;">
+      <div class="modal-sheet">
+        <div class="modal-header">
+          <h3 id="cal-campaign-title">📅 Calendário da Campanha</h3>
+          <button class="modal-close-btn" id="btn-close-calendar">✕</button>
+        </div>
+        
+        <div id="cal-card-content" style="background: #FDF8F5; border: 1.5px solid var(--border-light); border-radius: var(--radius-md); padding: 16px; margin-bottom: 14px; text-align: center;">
+          <!-- Informações renderizadas via JS -->
+        </div>
+
+        <button type="button" class="btn-send-request" id="btn-confirm-calendar" style="margin-top: 0;">
+          Entendido
+        </button>
+      </div>
+    </div>
+
     <!-- Modal Adicionar Animal -->
     ${!isGuest ? `
       <div id="modal-add-pet" class="modal-backdrop" style="display: none;">
@@ -103,15 +126,15 @@ export function renderHomeView(container, onNavigate) {
           </div>
           <form id="form-new-pet">
             <div class="form-group-field">
-              <label>Nome do Pet</label>
+              <label>Nome do Pet *</label>
               <input type="text" id="pet-name" placeholder="Ex: Mel" required>
             </div>
             <div class="form-group-field">
-              <label>URL da Foto Real</label>
+              <label>URL da Foto Real *</label>
               <input type="url" id="pet-photo" placeholder="https://..." required>
             </div>
             <div class="form-group-field">
-              <label>Espécie</label>
+              <label>Espécie *</label>
               <select id="pet-species" required>
                 <option value="Cachorro">Cachorro</option>
                 <option value="Gato">Gato</option>
@@ -119,17 +142,17 @@ export function renderHomeView(container, onNavigate) {
               </select>
             </div>
             <div class="form-group-field">
-              <label>Idade e Sexo</label>
+              <label>Idade e Sexo *</label>
               <div style="display: flex; gap: 8px;">
-                <input type="text" id="pet-age" placeholder="Ex: 1 ano" required>
-                <select id="pet-sex" required>
+                <input type="text" id="pet-age" placeholder="Ex: 1 ano" required style="flex: 1;">
+                <select id="pet-sex" required style="flex: 1;">
                   <option value="Macho">Macho</option>
                   <option value="Fêmea">Fêmea</option>
                 </select>
               </div>
             </div>
             <div class="form-group-field">
-              <label>Porte</label>
+              <label>Porte *</label>
               <select id="pet-size" required>
                 <option value="Pequeno">Pequeno</option>
                 <option value="Médio">Médio</option>
@@ -137,7 +160,7 @@ export function renderHomeView(container, onNavigate) {
               </select>
             </div>
             <div class="form-group-field">
-              <label>História / Temperamento</label>
+              <label>História / Temperamento *</label>
               <textarea id="pet-desc" rows="2" placeholder="Dócil, castrado, vacinado..." required style="resize:none;"></textarea>
             </div>
             
@@ -155,30 +178,89 @@ export function renderHomeView(container, onNavigate) {
       </div>
     ` : ''}
 
-    <!-- Modal Adicionar Notícia -->
+    <!-- Modal Adicionar Notícia / Campanha com DATA NO CALENDÁRIO -->
     ${isAdmin ? `
       <div id="modal-add-news" class="modal-backdrop" style="display: none;">
         <div class="modal-sheet">
           <div class="modal-header">
-            <h3>Publicar Aviso da ONG</h3>
+            <h3>Publicar Campanha da ONG</h3>
             <button class="modal-close-btn" id="btn-close-news-modal">✕</button>
           </div>
           <form id="form-new-news">
             <div class="form-group-field">
-              <label>Título da Notícia / Aviso</label>
-              <input type="text" id="news-title" placeholder="Ex: Feira de Adoção Especial" required>
+              <label>Título da Campanha *</label>
+              <input type="text" id="news-title" placeholder="Ex: Feira de Adoção e Vacinação" required>
             </div>
             <div class="form-group-field">
-              <label>Conteúdo da Informação</label>
-              <textarea id="news-content" rows="3" placeholder="Escreva o comunicado para os tutores..." required style="resize:none;"></textarea>
+              <label>Data no Calendário do Evento *</label>
+              <input type="date" id="news-event-date" required>
             </div>
-            <button type="submit" class="btn-send-request">Publicar Aviso</button>
+            <div class="form-group-field">
+              <label>Horário do Evento *</label>
+              <input type="text" id="news-event-time" placeholder="Ex: 09:00 às 16:00" required>
+            </div>
+            <div class="form-group-field">
+              <label>Descrição e Orientações *</label>
+              <textarea id="news-content" rows="3" placeholder="Local, recomendações e cuidados para os tutores..." required style="resize:none;"></textarea>
+            </div>
+            <button type="submit" class="btn-send-request">Publicar Campanha</button>
           </form>
         </div>
       </div>
     ` : ''}
   `;
 
+  // Interação do Pop-up do Calendário
+  const modalCalendar = container.querySelector('#modal-campaign-calendar');
+  const btnCloseCalendar = container.querySelector('#btn-close-calendar');
+  const btnConfirmCalendar = container.querySelector('#btn-confirm-calendar');
+  const calTitle = container.querySelector('#cal-campaign-title');
+  const calContent = container.querySelector('#cal-card-content');
+
+  const closeCalendar = () => { if (modalCalendar) modalCalendar.style.display = 'none'; };
+  if (btnCloseCalendar) btnCloseCalendar.addEventListener('click', closeCalendar);
+  if (btnConfirmCalendar) btnConfirmCalendar.addEventListener('click', closeCalendar);
+
+  container.querySelectorAll('.news-card-item').forEach(card => {
+    card.addEventListener('click', () => {
+      const idx = card.dataset.index;
+      const item = newsList[idx];
+      if (!item) return;
+
+      const [year, month, day] = item.eventDate ? item.eventDate.split('-') : ['2026', '09', '26'];
+      const meses = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+      const nomeMes = meses[parseInt(month, 10) - 1] || 'Setembro';
+
+      calTitle.textContent = `📅 Calendário da Campanha`;
+      calContent.innerHTML = `
+        <div style="font-size: 15px; font-weight: 800; color: var(--color-primary-dark); margin-bottom: 8px;">
+          ${item.title}
+        </div>
+        
+        <!-- Bloco de Folha de Calendário Visual -->
+        <div style="width: 120px; margin: 0 auto 12px; background: white; border: 2px solid var(--color-primary); border-radius: var(--radius-sm); overflow: hidden; box-shadow: 0 4px 10px rgba(247, 127, 0, 0.15);">
+          <div style="background: var(--color-primary); color: white; font-size: 11px; font-weight: 800; padding: 4px; text-transform: uppercase;">
+            ${nomeMes} ${year}
+          </div>
+          <div style="font-size: 36px; font-weight: 800; color: var(--text-main); padding: 8px 0;">
+            ${day}
+          </div>
+        </div>
+
+        <div style="font-size: 13px; font-weight: 700; color: var(--text-main); margin-bottom: 4px;">
+          ⏰ Horário: <span style="color: #2A9D8F;">${item.eventTime || '09:00 às 15:00'}</span>
+        </div>
+
+        <p style="font-size: 12px; color: var(--text-muted); line-height: 1.4; margin-top: 8px;">
+          ${item.content}
+        </p>
+      `;
+
+      modalCalendar.style.display = 'flex';
+    });
+  });
+
+  // Modais de Cadastro de Pet e Notícias
   const modalPet = container.querySelector('#modal-add-pet');
   const btnOpenPet = container.querySelector('#btn-open-add-pet');
   const btnEmptyAdd = container.querySelector('#btn-empty-add');
@@ -229,6 +311,8 @@ export function renderHomeView(container, onNavigate) {
       const item = {
         id: "news-" + Date.now(),
         title: container.querySelector('#news-title').value.trim(),
+        eventDate: container.querySelector('#news-event-date').value,
+        eventTime: container.querySelector('#news-event-time').value.trim(),
         content: container.querySelector('#news-content').value.trim(),
         date: new Date().toLocaleDateString('pt-BR'),
         author: "Administração DoaPets"

@@ -53,33 +53,43 @@ export function renderProfileView(container, onLogout) {
         `}
       </div>
 
-      <!-- Meus Animais para Doação -->
+      <!-- SEÇÃO MINIMIZÁVEL: Meus Animais para Doação -->
       ${!isGuest ? `
-        <div class="profile-section-title">${isAdmin ? 'Animais Vinculados à Gestão da ONG' : 'Meus Animais para Doação'} (${myPets.length})</div>
-        <div style="margin-bottom: 16px;">
-          ${myPets.length === 0 ? `
-            <div style="background: var(--bg-surface); border: 1px solid var(--border-light); border-radius: var(--radius-md); padding: 14px; text-align: center; font-size: 12px; color: var(--text-muted);">
-              ${isAdmin ? 'Nenhum animal cadastrado diretamente por este perfil.' : 'Você ainda não cadastrou nenhum animal para doação.'}
+        <div class="accordion-item" id="acc-my-pets" style="margin-bottom: 16px; border-radius: var(--radius-md); border: 1px solid var(--border-light); background: var(--bg-surface); overflow: hidden; box-shadow: var(--shadow-card);">
+          <div class="accordion-header" id="header-my-pets" style="padding: 14px 16px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; user-select: none;">
+            <div style="display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 800; color: var(--text-main);">
+              <span>🐾</span>
+              <span>${isAdmin ? 'Animais Vinculados à ONG' : 'Meus Animais para Doação'} (${myPets.length})</span>
             </div>
-          ` : `
-            ${myPets.map(pet => `
-              <div class="request-card" style="margin-bottom: 8px;">
-                <div class="request-card-header">
-                  <span class="request-pet-name">🐾 ${pet.name}</span>
-                  <span class="status-badge ${pet.status === 'Disponível' || pet.status === 'Aprovado' ? 'status-aprovado' : 'status-pendente'}">
-                    ${pet.status}
-                  </span>
-                </div>
-                <div class="request-detail-line"><strong>Espécie e Sexo:</strong> ${pet.species} • ${pet.sex} (${pet.age})</div>
-                <div class="request-detail-line"><strong>Status:</strong> ${pet.status === 'Disponível' || pet.status === 'Aprovado' ? '✅ Aprovado e visível para todos' : '⏳ Aguardando autorização da ONG'}</div>
-                <div class="request-detail-line"><strong>Data:</strong> ${pet.date}</div>
+            <span class="accordion-arrow" id="arrow-my-pets" style="font-size: 12px; color: var(--text-muted); transition: transform 0.25s ease;">▼</span>
+          </div>
+          <div class="accordion-content" id="content-my-pets" style="display: none; padding: 0 14px 14px; border-top: 1px dashed var(--border-light);">
+            ${myPets.length === 0 ? `
+              <div style="padding: 12px; text-align: center; font-size: 12px; color: var(--text-muted);">
+                ${isAdmin ? 'Nenhum animal cadastrado diretamente por este perfil.' : 'Você ainda não cadastrou nenhum animal para doação.'}
               </div>
-            `).join('')}
-          `}
+            ` : `
+              <div style="margin-top: 10px;">
+                ${myPets.map(pet => `
+                  <div class="request-card" style="margin-bottom: 8px; background: #FFFDFB;">
+                    <div class="request-card-header">
+                      <span class="request-pet-name">🐾 ${pet.name}</span>
+                      <span class="status-badge ${pet.status === 'Disponível' || pet.status === 'Aprovado' ? 'status-aprovado' : 'status-pendente'}">
+                        ${pet.status}
+                      </span>
+                    </div>
+                    <div class="request-detail-line"><strong>Espécie e Sexo:</strong> ${pet.species} • ${pet.sex} (${pet.age})</div>
+                    <div class="request-detail-line"><strong>Status:</strong> ${pet.status === 'Disponível' || pet.status === 'Aprovado' ? '✅ Aprovado e visível' : '⏳ Aguardando aprovação da ONG'}</div>
+                    <div class="request-detail-line"><strong>Data:</strong> ${pet.date}</div>
+                  </div>
+                `).join('')}
+              </div>
+            `}
+          </div>
         </div>
       ` : ''}
 
-      <!-- Dados Obrigatórios -->
+      <!-- Dados Oficiais Cadastrados -->
       <div class="profile-section-title">Dados Cadastrais Oficiais</div>
       <div class="profile-group-card">
         <div class="profile-item">
@@ -182,6 +192,20 @@ export function renderProfileView(container, onLogout) {
       </div>
     ` : ''}
   `;
+
+  // Minimizar / Expandir Meus Animais
+  const headerMyPets = container.querySelector('#header-my-pets');
+  const contentMyPets = container.querySelector('#content-my-pets');
+  const arrowMyPets = container.querySelector('#arrow-my-pets');
+
+  if (headerMyPets) {
+    headerMyPets.addEventListener('click', () => {
+      const isVisible = contentMyPets.style.display === 'block';
+      contentMyPets.style.display = isVisible ? 'none' : 'block';
+      arrowMyPets.style.transform = isVisible ? 'rotate(0deg)' : 'rotate(180deg)';
+      arrowMyPets.style.color = isVisible ? 'var(--text-muted)' : 'var(--color-primary)';
+    });
+  }
 
   if (isGuest) {
     container.querySelector('#btn-guest-register-now').addEventListener('click', () => {
