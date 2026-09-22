@@ -23,11 +23,15 @@
   }
 
   isAdmin() {
-    if (!this.state.currentUser) return false;
+    if (!this.state.currentUser || this.isGuest()) return false;
     const name = (this.state.currentUser.name || "").toLowerCase();
     const email = (this.state.currentUser.email || "").toLowerCase();
     return name.includes("doapets") || name.includes("oscar3") ||
            email.includes("doapets") || email.includes("oscar3");
+  }
+
+  isGuest() {
+    return this.state.currentUser && this.state.currentUser.isGuest === true;
   }
 
   getState() {
@@ -37,9 +41,9 @@
   setState(newState) {
     this.state = { ...this.state, ...newState };
     if (newState.currentUser !== undefined) {
-      if (newState.currentUser) {
+      if (newState.currentUser && !newState.currentUser.isGuest) {
         localStorage.setItem('doapets_user', JSON.stringify(newState.currentUser));
-      } else {
+      } else if (!newState.currentUser) {
         localStorage.removeItem('doapets_user');
       }
     }

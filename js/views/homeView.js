@@ -2,6 +2,7 @@
 
 export function renderHomeView(container, onNavigate) {
   const isAdmin = store.isAdmin();
+  const isGuest = store.isGuest();
   const animals = store.getState().animals;
   const newsList = store.getState().news || [];
 
@@ -9,13 +10,17 @@ export function renderHomeView(container, onNavigate) {
     <div class="home-top-bar">
       <div>
         <h2 class="home-top-title">Início</h2>
-        <span style="font-size: 12px; color: var(--text-muted);">DoaPets Oficial</span>
+        <span style="font-size: 12px; color: var(--text-muted);">
+          ${isGuest ? 'Modo Visitante (Apenas Visualização)' : 'DoaPets Oficial'}
+        </span>
       </div>
       <div style="display: flex; gap: 8px;">
         ${isAdmin ? `
           <button class="btn-add-pet" id="btn-open-news" title="Adicionar Notícia/Aviso" style="background: #2B2D42;">📢</button>
         ` : ''}
-        <button class="btn-add-pet" id="btn-open-add-pet" title="Cadastrar animal">+</button>
+        ${!isGuest ? `
+          <button class="btn-add-pet" id="btn-open-add-pet" title="Cadastrar animal">+</button>
+        ` : ''}
       </div>
     </div>
 
@@ -28,7 +33,7 @@ export function renderHomeView(container, onNavigate) {
       </button>
     </div>
 
-    <!-- Mural de Notícias e Informações da ONG -->
+    <!-- Mural de Notícias -->
     ${newsList.length > 0 ? `
       <div class="home-top-bar" style="margin-bottom: 8px;">
         <h3 style="font-size: 15px; font-weight: 800; color: var(--text-main);">Informativos da ONG 📢</h3>
@@ -54,9 +59,13 @@ export function renderHomeView(container, onNavigate) {
       ${animals.length === 0 ? `
         <div class="empty-pets-notice">
           <p>Nenhum animal cadastrado no momento.</p>
-          <button class="btn-adopt-this" id="btn-empty-add" style="display:inline-block; width:auto; padding: 10px 20px; margin-top: 8px;">
-            + Cadastrar Primeiro Animal
-          </button>
+          ${!isGuest ? `
+            <button class="btn-adopt-this" id="btn-empty-add" style="display:inline-block; width:auto; padding: 10px 20px; margin-top: 8px;">
+              + Cadastrar Primeiro Animal
+            </button>
+          ` : `
+            <p style="font-size: 11px; color: var(--color-primary); margin-top: 6px;">Entre com uma conta para cadastrar animais.</p>
+          `}
         </div>
       ` : `
         ${animals.map(pet => `
@@ -79,79 +88,82 @@ export function renderHomeView(container, onNavigate) {
     </div>
 
     <!-- Modal Adicionar Animal -->
-    <div id="modal-add-pet" class="modal-backdrop" style="display: none;">
-      <div class="modal-sheet">
-        <div class="modal-header">
-          <h3>Cadastrar Animal</h3>
-          <button class="modal-close-btn" id="btn-close-pet-modal">✕</button>
-        </div>
-        <form id="form-new-pet">
-          <div class="form-group-field">
-            <label>Nome do Pet</label>
-            <input type="text" id="pet-name" placeholder="Ex: Mel" required>
+    ${!isGuest ? `
+      <div id="modal-add-pet" class="modal-backdrop" style="display: none;">
+        <div class="modal-sheet">
+          <div class="modal-header">
+            <h3>Cadastrar Animal</h3>
+            <button class="modal-close-btn" id="btn-close-pet-modal">✕</button>
           </div>
-          <div class="form-group-field">
-            <label>URL da Foto Real</label>
-            <input type="url" id="pet-photo" placeholder="https://..." required>
-          </div>
-          <div class="form-group-field">
-            <label>Espécie</label>
-            <select id="pet-species" required>
-              <option value="Cachorro">Cachorro</option>
-              <option value="Gato">Gato</option>
-              <option value="Outro">Outro</option>
-            </select>
-          </div>
-          <div class="form-group-field">
-            <label>Idade e Sexo</label>
-            <div style="display: flex; gap: 8px;">
-              <input type="text" id="pet-age" placeholder="Ex: 1 ano" required>
-              <select id="pet-sex" required>
-                <option value="Macho">Macho</option>
-                <option value="Fêmea">Fêmea</option>
+          <form id="form-new-pet">
+            <div class="form-group-field">
+              <label>Nome do Pet</label>
+              <input type="text" id="pet-name" placeholder="Ex: Mel" required>
+            </div>
+            <div class="form-group-field">
+              <label>URL da Foto Real</label>
+              <input type="url" id="pet-photo" placeholder="https://..." required>
+            </div>
+            <div class="form-group-field">
+              <label>Espécie</label>
+              <select id="pet-species" required>
+                <option value="Cachorro">Cachorro</option>
+                <option value="Gato">Gato</option>
+                <option value="Outro">Outro</option>
               </select>
             </div>
-          </div>
-          <div class="form-group-field">
-            <label>Porte</label>
-            <select id="pet-size" required>
-              <option value="Pequeno">Pequeno</option>
-              <option value="Médio">Médio</option>
-              <option value="Grande">Grande</option>
-            </select>
-          </div>
-          <div class="form-group-field">
-            <label>História / Temperamento</label>
-            <textarea id="pet-desc" rows="2" placeholder="Dócil, castrado, vacinado..." required style="resize:none;"></textarea>
-          </div>
-          <button type="submit" class="btn-send-request">Salvar e Publicar</button>
-        </form>
-      </div>
-    </div>
-
-    <!-- Modal Adicionar Notícia (Exclusivo para Doapets e Oscar3) -->
-    <div id="modal-add-news" class="modal-backdrop" style="display: none;">
-      <div class="modal-sheet">
-        <div class="modal-header">
-          <h3>Publicar Aviso da ONG</h3>
-          <button class="modal-close-btn" id="btn-close-news-modal">✕</button>
+            <div class="form-group-field">
+              <label>Idade e Sexo</label>
+              <div style="display: flex; gap: 8px;">
+                <input type="text" id="pet-age" placeholder="Ex: 1 ano" required>
+                <select id="pet-sex" required>
+                  <option value="Macho">Macho</option>
+                  <option value="Fêmea">Fêmea</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-group-field">
+              <label>Porte</label>
+              <select id="pet-size" required>
+                <option value="Pequeno">Pequeno</option>
+                <option value="Médio">Médio</option>
+                <option value="Grande">Grande</option>
+              </select>
+            </div>
+            <div class="form-group-field">
+              <label>História / Temperamento</label>
+              <textarea id="pet-desc" rows="2" placeholder="Dócil, castrado, vacinado..." required style="resize:none;"></textarea>
+            </div>
+            <button type="submit" class="btn-send-request">Salvar e Publicar</button>
+          </form>
         </div>
-        <form id="form-new-news">
-          <div class="form-group-field">
-            <label>Título da Notícia / Aviso</label>
-            <input type="text" id="news-title" placeholder="Ex: Feira de Adoção Especial" required>
-          </div>
-          <div class="form-group-field">
-            <label>Conteúdo da Informação</label>
-            <textarea id="news-content" rows="3" placeholder="Escreva o comunicado para os tutores..." required style="resize:none;"></textarea>
-          </div>
-          <button type="submit" class="btn-send-request">Publicar Aviso</button>
-        </form>
       </div>
-    </div>
+    ` : ''}
+
+    <!-- Modal Adicionar Notícia -->
+    ${isAdmin ? `
+      <div id="modal-add-news" class="modal-backdrop" style="display: none;">
+        <div class="modal-sheet">
+          <div class="modal-header">
+            <h3>Publicar Aviso da ONG</h3>
+            <button class="modal-close-btn" id="btn-close-news-modal">✕</button>
+          </div>
+          <form id="form-new-news">
+            <div class="form-group-field">
+              <label>Título da Notícia / Aviso</label>
+              <input type="text" id="news-title" placeholder="Ex: Feira de Adoção Especial" required>
+            </div>
+            <div class="form-group-field">
+              <label>Conteúdo da Informação</label>
+              <textarea id="news-content" rows="3" placeholder="Escreva o comunicado para os tutores..." required style="resize:none;"></textarea>
+            </div>
+            <button type="submit" class="btn-send-request">Publicar Aviso</button>
+          </form>
+        </div>
+      </div>
+    ` : ''}
   `;
 
-  // Modais
   const modalPet = container.querySelector('#modal-add-pet');
   const btnOpenPet = container.querySelector('#btn-open-add-pet');
   const btnEmptyAdd = container.querySelector('#btn-empty-add');
@@ -163,12 +175,12 @@ export function renderHomeView(container, onNavigate) {
   const btnCloseNews = container.querySelector('#btn-close-news-modal');
   const formNews = container.querySelector('#form-new-news');
 
-  if (btnOpenPet) btnOpenPet.addEventListener('click', () => modalPet.style.display = 'flex');
-  if (btnEmptyAdd) btnEmptyAdd.addEventListener('click', () => modalPet.style.display = 'flex');
-  if (btnClosePet) btnClosePet.addEventListener('click', () => modalPet.style.display = 'none');
+  if (btnOpenPet && modalPet) btnOpenPet.addEventListener('click', () => modalPet.style.display = 'flex');
+  if (btnEmptyAdd && modalPet) btnEmptyAdd.addEventListener('click', () => modalPet.style.display = 'flex');
+  if (btnClosePet && modalPet) btnClosePet.addEventListener('click', () => modalPet.style.display = 'none');
 
-  if (btnOpenNews) btnOpenNews.addEventListener('click', () => modalNews.style.display = 'flex');
-  if (btnCloseNews) btnCloseNews.addEventListener('click', () => modalNews.style.display = 'none');
+  if (btnOpenNews && modalNews) btnOpenNews.addEventListener('click', () => modalNews.style.display = 'flex');
+  if (btnCloseNews && modalNews) btnCloseNews.addEventListener('click', () => modalNews.style.display = 'none');
 
   if (formPet) {
     formPet.addEventListener('submit', (e) => {

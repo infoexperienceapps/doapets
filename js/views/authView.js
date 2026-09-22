@@ -6,14 +6,12 @@ export function renderAuthView(container, onSuccess) {
   function render() {
     container.innerHTML = `
       <div class="auth-wrapper">
-        <!-- Banner de Boas-Vindas Superior -->
         <div class="auth-hero-banner">
           <div class="auth-hero-paw">🐾</div>
           <h2>DoaPets</h2>
           <p>${mode === 'login' ? 'Entre para transformar a vida de um animalzinho' : 'Crie sua conta e encontre seu novo companheiro'}</p>
         </div>
 
-        <!-- Cartão de Acesso -->
         <div class="auth-floating-card">
           <div class="auth-pill-switch">
             <button class="pill-btn ${mode === 'login' ? 'active' : ''}" id="switch-login">Entrar</button>
@@ -59,6 +57,13 @@ export function renderAuthView(container, onSuccess) {
               <button type="submit" class="btn-auth-action">Concluir Cadastro</button>
             </form>
           `}
+
+          <!-- Botão de Entrada Rápida sem Cadastro (Somente Visualização) -->
+          <div style="margin-top: 18px; text-align: center; border-top: 1px solid var(--border-light); padding-top: 14px;">
+            <button id="btn-enter-guest" style="color: var(--color-primary); font-size: 13px; font-weight: 700; text-decoration: underline; background: none; cursor: pointer;">
+              👀 Entrar como Visitante (Apenas Visualizar)
+            </button>
+          </div>
         </div>
       </div>
     `;
@@ -71,6 +76,20 @@ export function renderAuthView(container, onSuccess) {
     container.querySelector('#switch-reg').addEventListener('click', () => {
       mode = 'register';
       render();
+    });
+
+    // Ação Visitante: Apenas Visualizar
+    container.querySelector('#btn-enter-guest').addEventListener('click', () => {
+      const guestUser = {
+        name: "Visitante",
+        email: "visitante@doapets.com",
+        phone: "Apenas visualização",
+        city: "Modo Leitura",
+        avatarUrl: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=300&auto=format&fit=crop&q=80",
+        isGuest: true
+      };
+      store.setState({ currentUser: guestUser });
+      if (onSuccess) onSuccess();
     });
 
     const alertBox = container.querySelector('#auth-alert');
@@ -94,7 +113,8 @@ export function renderAuthView(container, onSuccess) {
           email: email,
           phone: "(37) 99999-0000",
           city: "Formiga, MG",
-          avatarUrl: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=300&auto=format&fit=crop&q=80"
+          avatarUrl: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=300&auto=format&fit=crop&q=80",
+          isGuest: false
         };
 
         store.setState({ currentUser: userData });
@@ -117,7 +137,8 @@ export function renderAuthView(container, onSuccess) {
           email,
           phone,
           city,
-          avatarUrl: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=300&auto=format&fit=crop&q=80"
+          avatarUrl: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=300&auto=format&fit=crop&q=80",
+          isGuest: false
         };
 
         store.setState({ currentUser: newUser });

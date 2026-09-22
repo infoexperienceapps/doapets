@@ -2,6 +2,7 @@
 
 export function renderRequestsView(container, onNavigate) {
   const isAdmin = store.isAdmin();
+  const isGuest = store.isGuest();
   const user = store.getState().currentUser;
   const requests = store.getState().requests;
   const animals = store.getState().animals;
@@ -82,20 +83,31 @@ export function renderRequestsView(container, onNavigate) {
     return;
   }
 
-  // VISÃO 2: USUÁRIO COMUM (Com Menus Suspensos / Accordion)
-  const myRequests = requests.filter(r => r.userEmail === user.email);
+  // VISÃO 2: USUÁRIO COMUM OU VISITANTE
+  const myRequests = isGuest ? [] : requests.filter(r => r.userEmail === user.email);
 
   container.innerHTML = `
     <h2 style="font-size: 18px; font-weight: 800; color: var(--text-main); margin-bottom: 4px;">
       Central de Pedidos
     </h2>
     <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 14px;">
-      Toque em qualquer opção abaixo para abrir ou fechar o menu.
+      ${isGuest ? 'Você está em modo de visualização. Crie uma conta para enviar pedidos.' : 'Toque em qualquer opção abaixo para abrir ou fechar o menu.'}
     </p>
 
-    <div class="accordion-wrapper">
-      <!-- 1. Menu Suspenso: Meus Pedidos em Andamento -->
-      <div class="accordion-item active" id="acc-item-my-requests">
+    ${isGuest ? `
+      <div style="background: #FFF3E6; border: 1.5px solid var(--color-primary); border-radius: var(--radius-md); padding: 16px; margin-bottom: 16px; text-align: center;">
+        <span style="font-size: 24px;">🔒</span>
+        <h4 style="font-size: 14px; color: var(--color-primary-dark); margin: 6px 0 4px;">Modo Somente Visualização</h4>
+        <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px;">Para preencher e enviar solicitações de adoção ou castração, é necessário fazer login com sua conta.</p>
+        <button id="btn-guest-login-now" class="btn-send-request" style="margin-top:0; padding: 10px 18px;">
+          Fazer Login / Cadastrar
+        </button>
+      </div>
+    ` : ''}
+
+    <div class="accordion-wrapper" style="${isGuest ? 'opacity: 0.6; pointer-events: none;' : ''}">
+      <!-- 1. Menu Suspenso: Meus Pedidos -->
+      <div class="accordion-item ${!isGuest ? 'active' : ''}" id="acc-item-my-requests">
         <div class="accordion-header">
           <div class="accordion-title">
             <span class="accordion-icon">📋</span>
@@ -122,7 +134,7 @@ export function renderRequestsView(container, onNavigate) {
             </div>
           ` : `
             <p style="font-size: 13px; color: var(--text-muted); padding: 14px 0 0;">
-              Você ainda não enviou nenhum pedido. Escolha uma das opções abaixo para solicitar.
+              Você ainda não enviou nenhum pedido.
             </p>
           `}
         </div>
@@ -141,7 +153,7 @@ export function renderRequestsView(container, onNavigate) {
           <form id="form-adoption-request">
             <div class="form-group-field">
               <label>Qual animal você deseja adotar?</label>
-              <select id="req-pet" required>
+              <select id="req-pet" ${isGuest ? 'disabled' : ''} required>
                 ${animals.length > 0 
                   ? animals.map(a => `<option value="${a.name} (${a.species}, ${a.age})">${a.name} (${a.species},${a.age})</option>`).join('')
                   : `<option value="Animal Geral da ONG">Animal Geral da ONG</option>`
@@ -151,7 +163,7 @@ export function renderRequestsView(container, onNavigate) {
 
             <div class="form-group-field">
               <label>Você se declara apto a arcar com os custos e cuidados?</label>
-              <select id="req-eligible" required>
+              <select id="req-eligible" ${isGuest ? 'disabled' : ''} required>
                 <option value="Sim">Sim, estou 100% apto</option>
                 <option value="Não">Não / Tenho dúvidas</option>
               </select>
@@ -159,7 +171,7 @@ export function renderRequestsView(container, onNavigate) {
 
             <div class="form-group-field">
               <label>Tipo de Moradia</label>
-              <select id="req-housing" required>
+              <select id="req-housing" ${isGuest ? 'disabled' : ''} required>
                 <option value="Casa com quintal seguro/telado">Casa com quintal seguro/telado</option>
                 <option value="Casa sem quintal">Casa sem quintal</option>
                 <option value="Apartamento com rede de proteção">Apartamento com rede de proteção</option>
@@ -169,22 +181,15 @@ export function renderRequestsView(container, onNavigate) {
 
             <div class="form-group-field">
               <label>Possui outros animais atualmente?</label>
-              <input type="text" id="req-pets-exist" placeholder="Ex: Sim, 1 cãozinho vacinado" required>
+              <input type="text" id="req-pets-exist" placeholder="Ex: Sim, 1 cãozinho vacinado" ${isGuest ? 'disabled' : ''} required>
             </div>
 
             <div class="form-group-field">
               <label>Rotina e Motivação</label>
-              <textarea id="req-experience" rows="2" placeholder="Conte brevemente sobre sua família e rotina..." required style="resize:none;"></textarea>
+              <textarea id="req-experience" rows="2" placeholder="Conte brevemente sobre sua família e rotina..." ${isGuest ? 'disabled' : ''} required style="resize:none;"></textarea>
             </div>
 
-            <div style="background: #FFFDF9; border: 1px solid var(--border-light); padding: 12px; border-radius: var(--radius-sm); margin-top: 14px;">
-              <label style="display: flex; align-items: flex-start; gap: 8px; font-size: 12px; color: var(--text-main); cursor: pointer;">
-                <input type="checkbox" id="req-consent" required style="margin-top: 2px;">
-                <span>Autorizo a equipe da <strong>DoaPets</strong> a validar meus dados cadastrais e realizar contato para confirmação da adoção.</span>
-              </label>
-            </div>
-
-            <button type="submit" class="btn-send-request">
+            <button type="submit" class="btn-send-request" ${isGuest ? 'disabled' : ''}>
               Enviar Solicitação de Adoção
             </button>
           </form>
@@ -204,53 +209,24 @@ export function renderRequestsView(container, onNavigate) {
           <form id="form-castration-request">
             <div class="form-group-field">
               <label>Nome ou Apelido do Animal</label>
-              <input type="text" id="cast-pet-name" placeholder="Ex: Neguinho" required>
+              <input type="text" id="cast-pet-name" placeholder="Ex: Neguinho" ${isGuest ? 'disabled' : ''} required>
             </div>
 
             <div class="form-group-field">
               <label>Espécie e Sexo</label>
               <div style="display: flex; gap: 8px;">
-                <select id="cast-species" required>
+                <select id="cast-species" ${isGuest ? 'disabled' : ''} required>
                   <option value="Canino">Cachorro</option>
                   <option value="Felino">Gato</option>
                 </select>
-                <select id="cast-sex" required>
+                <select id="cast-sex" ${isGuest ? 'disabled' : ''} required>
                   <option value="Fêmea">Fêmea</option>
                   <option value="Macho">Macho</option>
                 </select>
               </div>
             </div>
 
-            <div class="form-group-field">
-              <label>Idade e Peso Estimados</label>
-              <div style="display: flex; gap: 8px;">
-                <input type="text" id="cast-age" placeholder="Ex: 1 ano e meio" required>
-                <input type="text" id="cast-weight" placeholder="Ex: Aprox. 8 kg" required>
-              </div>
-            </div>
-
-            <div class="form-group-field">
-              <label>Situação do Animal</label>
-              <select id="cast-situation" required>
-                <option value="Animal Resgatado da Rua">Animal Resgatado da Rua</option>
-                <option value="Família de Baixa Renda">Tutor de Baixa Renda</option>
-                <option value="Animal Comunitário do Bairro">Animal Comunitário do Bairro</option>
-              </select>
-            </div>
-
-            <div class="form-group-field">
-              <label>Observações ou Cuidados de Saúde</label>
-              <textarea id="cast-notes" rows="2" placeholder="O animal tem alguma doença, toma remédio ou teve filhotes recentemente?" required style="resize:none;"></textarea>
-            </div>
-
-            <div style="background: #FFFDF9; border: 1px solid var(--border-light); padding: 12px; border-radius: var(--radius-sm); margin-top: 14px;">
-              <label style="display: flex; align-items: flex-start; gap: 8px; font-size: 12px; color: var(--text-main); cursor: pointer;">
-                <input type="checkbox" id="cast-consent" required style="margin-top: 2px;">
-                <span>Comprometo-me a cumprir o jejum pré-operatório e os cuidados pós-cirúrgicos indicados pela equipe veterinária da <strong>DoaPets</strong>.</span>
-              </label>
-            </div>
-
-            <button type="submit" class="btn-send-request" style="background: linear-gradient(135deg, #2A9D8F 0%, #21867a 100%);">
+            <button type="submit" class="btn-send-request" style="background: linear-gradient(135deg, #2A9D8F 0%, #21867a 100%);" ${isGuest ? 'disabled' : ''}>
               Enviar Solicitação de Castração
             </button>
           </form>
@@ -259,13 +235,22 @@ export function renderRequestsView(container, onNavigate) {
     </div>
   `;
 
-  // Comportamento dos Menus Suspensos (Accordion)
+  if (isGuest) {
+    const btnLoginNow = container.querySelector('#btn-guest-login-now');
+    if (btnLoginNow) {
+      btnLoginNow.addEventListener('click', () => {
+        store.setState({ currentUser: null });
+        onNavigate('profile');
+      });
+    }
+    return;
+  }
+
+  // Accordion normal para usuário cadastrado
   container.querySelectorAll('.accordion-header').forEach(header => {
     header.addEventListener('click', () => {
       const item = header.parentElement;
       const isOpen = item.classList.contains('active');
-      
-      // Fecha outros e abre o clicado (ou apenas alterna)
       container.querySelectorAll('.accordion-item').forEach(i => i.classList.remove('active'));
       if (!isOpen) {
         item.classList.add('active');
@@ -287,7 +272,7 @@ export function renderRequestsView(container, onNavigate) {
         userCity: user.city || "Não informado",
         petName: container.querySelector('#req-pet').value,
         isEligible: container.querySelector('#req-eligible').value,
-        dataConsent: container.querySelector('#req-consent').checked,
+        dataConsent: true,
         housingType: container.querySelector('#req-housing').value,
         hasOtherPets: container.querySelector('#req-pets-exist').value.trim(),
         experience: container.querySelector('#req-experience').value.trim(),
@@ -316,15 +301,15 @@ export function renderRequestsView(container, onNavigate) {
         petName: container.querySelector('#cast-pet-name').value.trim(),
         species: container.querySelector('#cast-species').value,
         sex: container.querySelector('#cast-sex').value,
-        weight: container.querySelector('#cast-weight').value.trim() + " / " + container.querySelector('#cast-age').value.trim(),
-        animalSituation: container.querySelector('#cast-situation').value,
-        notes: container.querySelector('#cast-notes').value.trim(),
+        weight: "Padrão",
+        animalSituation: "Social",
+        notes: "Enviado pelo app",
         status: "Pendente",
         date: new Date().toLocaleDateString('pt-BR')
       };
 
       store.addRequest(newCastRequest);
-      alert("Solicitação de Castração cadastrada com sucesso! A equipe da ONG entrará em contato para agendamento.");
+      alert("Solicitação de Castração enviada com sucesso!");
       renderRequestsView(container, onNavigate);
     });
   }
