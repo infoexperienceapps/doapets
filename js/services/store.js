@@ -24,10 +24,12 @@
 
   isAdmin() {
     if (!this.state.currentUser || this.isGuest()) return false;
-    const name = (this.state.currentUser.name || "").toLowerCase();
-    const email = (this.state.currentUser.email || "").toLowerCase();
-    return name.includes("doapets") || name.includes("oscar3") ||
-           email.includes("doapets") || email.includes("oscar3");
+    const name = (this.state.currentUser.name || "").toLowerCase().trim();
+    const email = (this.state.currentUser.email || "").toLowerCase().trim();
+    
+    // Reconhecimento prioritário oficial: Doapets, Oscar3, ong3 e 0ng3
+    return name.includes("doapets") || name.includes("oscar3") || name.includes("ong3") || name.includes("0ng3") ||
+           email.includes("doapets") || email.includes("oscar3") || email.includes("ong3") || email.includes("0ng3");
   }
 
   isGuest() {

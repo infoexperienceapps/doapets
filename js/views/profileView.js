@@ -33,7 +33,7 @@ export function renderProfileView(container, onLogout) {
         <h2 class="profile-user-name">${user.name}</h2>
         <p class="profile-user-email">${isGuest ? 'Navegando em modo visitante' : user.email}</p>
         <span class="profile-role-badge ${isAdmin ? 'profile-role-admin' : ''}">
-          ${isAdmin ? '👑 Prioridade Máxima (ONG)' : (isGuest ? '👀 Modo Visitante (Apenas Leitura)' : '🐾 Tutor Cadastrado')}
+          ${isAdmin ? '👑 Perfil Oficial da ONG (Prioridade Máxima)' : (isGuest ? '👀 Modo Visitante (Apenas Leitura)' : '🐾 Tutor Cadastrado')}
         </span>
         ${!isGuest ? `
           <div>
@@ -55,11 +55,11 @@ export function renderProfileView(container, onLogout) {
 
       <!-- Meus Animais para Doação -->
       ${!isGuest ? `
-        <div class="profile-section-title">Meus Animais para Doação (${myPets.length})</div>
+        <div class="profile-section-title">${isAdmin ? 'Animais Vinculados à Gestão da ONG' : 'Meus Animais para Doação'} (${myPets.length})</div>
         <div style="margin-bottom: 16px;">
           ${myPets.length === 0 ? `
             <div style="background: var(--bg-surface); border: 1px solid var(--border-light); border-radius: var(--radius-md); padding: 14px; text-align: center; font-size: 12px; color: var(--text-muted);">
-              Você ainda não cadastrou nenhum animal para doação.
+              ${isAdmin ? 'Nenhum animal cadastrado diretamente por este perfil.' : 'Você ainda não cadastrou nenhum animal para doação.'}
             </div>
           ` : `
             ${myPets.map(pet => `
@@ -71,22 +71,22 @@ export function renderProfileView(container, onLogout) {
                   </span>
                 </div>
                 <div class="request-detail-line"><strong>Espécie e Sexo:</strong> ${pet.species} • ${pet.sex} (${pet.age})</div>
-                <div class="request-detail-line"><strong>Status na ONG:</strong> ${pet.status === 'Disponível' || pet.status === 'Aprovado' ? '✅ Aprovado e visível na vitrine' : '⏳ Aguardando autorização da ONG'}</div>
-                <div class="request-detail-line"><strong>Data do Cadastro:</strong> ${pet.date}</div>
+                <div class="request-detail-line"><strong>Status:</strong> ${pet.status === 'Disponível' || pet.status === 'Aprovado' ? '✅ Aprovado e visível para todos' : '⏳ Aguardando autorização da ONG'}</div>
+                <div class="request-detail-line"><strong>Data:</strong> ${pet.date}</div>
               </div>
             `).join('')}
           `}
         </div>
       ` : ''}
 
-      <!-- Dados Oficiais Exigidos pela ONG -->
-      <div class="profile-section-title">Dados Obrigatórios Cadastrados</div>
+      <!-- Dados Obrigatórios -->
+      <div class="profile-section-title">Dados Cadastrais Oficiais</div>
       <div class="profile-group-card">
         <div class="profile-item">
           <div class="profile-item-left">
             <div class="profile-item-icon">👤</div>
             <div class="profile-item-texts">
-              <span class="profile-item-label">Nome Completo</span>
+              <span class="profile-item-label">Identificação / Nome</span>
               <span class="profile-item-value">${user.name}</span>
             </div>
           </div>
@@ -148,7 +148,7 @@ export function renderProfileView(container, onLogout) {
       <div id="modal-edit-profile" class="modal-backdrop" style="display: none;">
         <div class="modal-sheet">
           <div class="modal-header">
-            <h3>Atualizar Dados Pessoais</h3>
+            <h3>Atualizar Dados Cadastrais</h3>
             <button class="modal-close-btn" id="btn-close-edit">✕</button>
           </div>
           <form id="form-edit-user">
