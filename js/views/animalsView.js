@@ -5,7 +5,6 @@ export function renderAnimalsView(container, onNavigate) {
   const isGuest = store.isGuest();
   const user = store.getState().currentUser;
   
-  // Na vitrine geral aparecem apenas os pets Aprovados (ou todos para a administração)
   const allAnimals = store.getState().animals;
   const animals = isAdmin 
     ? allAnimals 
@@ -14,8 +13,8 @@ export function renderAnimalsView(container, onNavigate) {
   container.innerHTML = `
     <div class="home-top-bar">
       <div>
-        <h2 class="home-top-title">Animais para Adoção</h2>
-        <span style="font-size: 12px; color: var(--text-muted);">${animals.length} disponíveis</span>
+        <h2 class="home-top-title">Todos os Animais</h2>
+        <span style="font-size: 12px; color: var(--text-muted);">${animals.length} cadastrados na ONG</span>
       </div>
       ${!isGuest ? `
         <button class="btn-add-pet" id="btn-open-add-pet-animals" title="Cadastrar animal">+</button>
@@ -31,7 +30,7 @@ export function renderAnimalsView(container, onNavigate) {
               + Cadastrar Primeiro Animal
             </button>
           ` : `
-            <p style="font-size: 12px; color: var(--color-primary); margin-top: 6px;">Entre com uma conta para solicitar publicação de animais.</p>
+            <p style="font-size: 12px; color: var(--color-primary); margin-top: 6px;">Entre com uma conta para cadastrar animais.</p>
           `}
         </div>
       ` : `
@@ -57,25 +56,25 @@ export function renderAnimalsView(container, onNavigate) {
       `}
     </div>
 
-    <!-- Modal Adicionar Animal com CSS robusto e alinhado -->
+    <!-- Modal Adicionar Animal com CSS robusto, alinhado e 100% formatado -->
     ${!isGuest ? `
       <div id="modal-add-pet-animals" class="modal-backdrop" style="display: none;">
         <div class="modal-sheet">
           <div class="modal-header">
-            <h3>Cadastrar Animal para Adoção</h3>
+            <h3>Cadastrar Animal</h3>
             <button class="modal-close-btn" id="btn-close-pet-modal-animals">✕</button>
           </div>
           <form id="form-new-pet-animals">
             <div class="form-group-field">
-              <label>Nome do Animal</label>
+              <label>Nome do Animal *</label>
               <input type="text" id="pet-name-a" placeholder="Ex: Bob" required>
             </div>
             <div class="form-group-field">
-              <label>URL da Foto Real</label>
+              <label>URL da Foto Real *</label>
               <input type="url" id="pet-photo-a" placeholder="https://..." required>
             </div>
             <div class="form-group-field">
-              <label>Espécie</label>
+              <label>Espécie *</label>
               <select id="pet-species-a" required>
                 <option value="Cachorro">Cachorro</option>
                 <option value="Gato">Gato</option>
@@ -83,17 +82,17 @@ export function renderAnimalsView(container, onNavigate) {
               </select>
             </div>
             <div class="form-group-field">
-              <label>Idade e Sexo</label>
+              <label>Idade e Sexo *</label>
               <div style="display: flex; gap: 8px;">
-                <input type="text" id="pet-age-a" placeholder="Ex: 2 anos" required>
-                <select id="pet-sex-a" required>
+                <input type="text" id="pet-age-a" placeholder="Ex: 2 anos" required style="flex: 1;">
+                <select id="pet-sex-a" required style="flex: 1;">
                   <option value="Macho">Macho</option>
                   <option value="Fêmea">Fêmea</option>
                 </select>
               </div>
             </div>
             <div class="form-group-field">
-              <label>Porte</label>
+              <label>Porte *</label>
               <select id="pet-size-a" required>
                 <option value="Pequeno">Pequeno</option>
                 <option value="Médio">Médio</option>
@@ -101,8 +100,8 @@ export function renderAnimalsView(container, onNavigate) {
               </select>
             </div>
             <div class="form-group-field">
-              <label>História / Cuidados / Castrado?</label>
-              <textarea id="pet-desc-a" rows="2" placeholder="Dócil, castrado, vacinado..." required style="resize:none;"></textarea>
+              <label>História / Cuidados / Castrado? *</label>
+              <textarea id="pet-desc-a" rows="3" placeholder="Ex: Dócil, vacinado, castrado, sociável..." required style="resize:none;"></textarea>
             </div>
             
             ${!isAdmin ? `
@@ -111,8 +110,8 @@ export function renderAnimalsView(container, onNavigate) {
               </div>
             ` : ''}
 
-            <button type="submit" class="btn-send-request" style="margin-top: 12px;">
-              ${isAdmin ? 'Publicar Imediatamente' : 'Enviar para Aprovação da ONG'}
+            <button type="submit" class="btn-send-request" style="margin-top: 14px;">
+              ${isAdmin ? 'Publicar Imediatamente' : 'Salvar e Enviar para Aprovação'}
             </button>
           </form>
         </div>

@@ -7,14 +7,26 @@ export function renderRequestsView(container, onNavigate) {
   const requests = store.getState().requests;
   const animals = store.getState().animals;
 
-  // VISÃO 1: ADMINISTRADORES (Doapets e Oscar3) - Visualização completa dos 4 dados
+  // VISÃO 1: ADMINISTRADORES (ong3, Doapets e Oscar3)
   if (isAdmin) {
     const pendingPets = animals.filter(pet => pet.status === 'Pendente de Aprovação');
+    
+    // Separa os pedidos ativos dos recusados
+    const activeRequests = requests.filter(r => r.status !== 'Recusado');
+    const rejectedRequests = requests.filter(r => r.status === 'Recusado');
+
+    // Função para contar tentativas de um mesmo usuário (por e-mail ou CPF)
+    const countAttempts = (identifier) => {
+      if (!identifier) return 1;
+      return requests.filter(r => r.userEmail === identifier || (r.userCpf && r.userCpf === identifier)).length;
+    };
 
     container.innerHTML = `
       <div class="admin-badge-banner">
         <span>🛡️ Painel Oficial ONG (${user.name})</span>
-        <span>${requests.length} pedidos | ${pendingPets.length} pets pendentes</span>
+        <button id="btn-open-rejected-popup" style="background: #D62828; color: white; padding: 5px 10px; border-radius: var(--radius-full); font-size: 11px; font-weight: 800; cursor: pointer; display: flex; align-items: center; gap: 4px;">
+          🚫 Recusados (${rejectedRequests.length})
+        </button>
       </div>
 
       <!-- Pets aguardando aprovação -->
@@ -50,70 +62,129 @@ export function renderRequestsView(container, onNavigate) {
         </div>
       `}
 
-      <!-- Fila de Pedidos com os 4 DADOS OBRIGATÓRIOS EM DESTAQUE -->
+      <!-- Fila de Pedidos Ativos -->
       <h3 style="font-size: 16px; font-weight: 800; margin-bottom: 10px; color: var(--text-main);">
-        📋 Solicitações de Tutores (Adoção & Castração)
+        📋 Solicitações de Tutores em Aberto (${activeRequests.length})
       </h3>
 
-      ${requests.length === 0 ? `
+      ${activeRequests.length === 0 ? `
         <div style="text-align: center; padding: 30px 16px; color: var(--text-muted); font-size: 12px;">
-          Nenhuma solicitação de tutor no momento.
+          Nenhuma solicitação pendente no momento.
         </div>
       ` : `
         <div>
-          ${requests.map(req => `
-            <div class="request-card">
-              <div class="request-card-header">
-                <span class="request-pet-name">${req.type === 'Castração' ? '✂️ Castração: ' : '🐾 Adoção: '}${req.petName}</span>
-                <span class="status-badge status-${req.status.toLowerCase().replace(' ', '-')}">
-                  ${req.status}
-                </span>
-              </div>
-
-              <!-- BLOCO DE SEGURANÇA: DADOS PESSOAIS OBRIGATÓRIOS DO TUTOR -->
-              <div style="background: #FDF8F5; border: 1px solid var(--border-light); border-left: 4px solid var(--color-primary); border-radius: var(--radius-sm); padding: 10px 12px; margin-bottom: 10px; font-size: 12px;">
-                <div style="font-weight: 800; color: var(--color-primary-dark); margin-bottom: 4px;">👤 IDENTIFICAÇÃO DO SOLICITANTE:</div>
-                <div><strong>Nome Completo:</strong> ${req.userName}</div>
-                <div><strong>CPF:</strong> ${req.userCpf || 'Não informado no envio'}</div>
-                <div><strong>Telefone Contato Real:</strong> <span style="color: #2A9D8F; font-weight: 700;">${req.userPhone}</span></div>
-                <div><strong>Endereço Completo:</strong> ${req.userAddress || 'Não informado'}, ${req.userCity}</div>
-              </div>
-
-              ${req.type === 'Castração' ? `
-                <div style="background: #FFF3E6; padding: 8px 12px; border-radius: var(--radius-sm); margin-bottom: 10px; font-size: 12px; color: var(--color-primary-dark);">
-                  <strong>Modalidade:</strong> Castração Gratuita / Social<br>
-                  <strong>Espécie e Sexo:</strong> ${req.species} • ${req.sex} (${req.weight || 'Peso não inf.'})<br>
-                  <strong>Situação:</strong> ${req.animalSituation}
+          ${activeRequests.map(req => {
+            const totalTentativas = countAttempts(req.userEmail);
+            return `
+              <div class="request-card">
+                <div class="request-card-header">
+                  <span class="request-pet-name">${req.type === 'Castração' ? '✂️ Castração: ' : '🐾 Adoção: '}${req.petName}</span>
+                  <span class="status-badge status-${req.status.toLowerCase().replace(' ', '-')}">
+                    ${req.status}
+                  </span>
                 </div>
-              ` : `
-                <div style="background: ${req.isEligible === 'Sim' ? '#E8F5E9' : '#FFEBEE'}; padding: 8px 12px; border-radius: var(--radius-sm); margin-bottom: 10px; font-size: 12px;">
-                  <strong>Autodeclaração de Aptidão:</strong> ${req.isEligible === 'Sim' ? '✅ Apto' : '⚠️ Não Apto'}<br>
-                  <strong>Consentimento de Consulta:</strong> ${req.dataConsent ? '✅ Autorizado' : '❌ Não autorizou'}
+
+                <div style="background: #FDF8F5; border: 1px solid var(--border-light); border-left: 4px solid var(--color-primary); border-radius: var(--radius-sm); padding: 10px 12px; margin-bottom: 10px; font-size: 12px;">
+                  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 4px;">
+                    <span style="font-weight: 800; color: var(--color-primary-dark);">👤 SOLICITANTE:</span>
+                    <span style="background: #E9ECEF; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 700;">
+                      📊 Tentativa #${totalTentativas}
+                    </span>
+                  </div>
+                  <div><strong>Nome Completo:</strong> ${req.userName}</div>
+                  <div><strong>CPF:</strong> ${req.userCpf || 'Não informado'}</div>
+                  <div><strong>Telefone Contato:</strong> <span style="color: #2A9D8F; font-weight: 700;">${req.userPhone}</span></div>
+                  <div><strong>Endereço:</strong> ${req.userAddress || 'Não informado'}, ${req.userCity}</div>
                 </div>
-                <div class="request-detail-line"><strong>Tipo de Imóvel:</strong> ${req.housingType}</div>
-                <div class="request-detail-line"><strong>Outros Animais:</strong> ${req.hasOtherPets}</div>
-              `}
 
-              <div class="request-detail-line"><strong>Observações / Rotina:</strong> ${req.experience || req.notes || 'Sem observações'}</div>
-              <div class="request-detail-line"><strong>Data do Envio:</strong> ${req.date}</div>
+                ${req.type === 'Castração' ? `
+                  <div style="background: #FFF3E6; padding: 8px 12px; border-radius: var(--radius-sm); margin-bottom: 10px; font-size: 12px; color: var(--color-primary-dark);">
+                    <strong>Modalidade:</strong> Castração Gratuita / Social<br>
+                    <strong>Espécie e Sexo:</strong> ${req.species} • ${req.sex} (${req.weight || 'Peso não inf.'})<br>
+                    <strong>Situação:</strong> ${req.animalSituation}
+                  </div>
+                ` : `
+                  <div style="background: ${req.isEligible === 'Sim' ? '#E8F5E9' : '#FFEBEE'}; padding: 8px 12px; border-radius: var(--radius-sm); margin-bottom: 10px; font-size: 12px;">
+                    <strong>Autodeclaração de Aptidão:</strong> ${req.isEligible === 'Sim' ? '✅ Apto' : '⚠️ Não Apto'}<br>
+                    <strong>Consentimento de Consulta:</strong> ${req.dataConsent ? '✅ Autorizado' : '❌ Não autorizou'}
+                  </div>
+                  <div class="request-detail-line"><strong>Tipo de Imóvel:</strong> ${req.housingType}</div>
+                  <div class="request-detail-line"><strong>Outros Animais:</strong> ${req.hasOtherPets}</div>
+                `}
 
-              <div class="admin-actions-bar">
-                <button class="btn-status-action btn-review" data-action="Em Análise" data-id="${req.id}">
-                  Colocar Em Análise
-                </button>
-                <button class="btn-status-action btn-approve" data-action="Aprovado" data-id="${req.id}">
-                  ✓ Aprovar Pedido
-                </button>
-                <button class="btn-status-action btn-reject" data-action="Recusado" data-id="${req.id}">
-                  ✕ Recusar
-                </button>
+                <div class="request-detail-line"><strong>Observações:</strong> ${req.experience || req.notes || 'Sem observações'}</div>
+                <div class="request-detail-line"><strong>Data:</strong> ${req.date}</div>
+
+                <div class="admin-actions-bar">
+                  <button class="btn-status-action btn-review" data-action="Em Análise" data-id="${req.id}">
+                    Colocar Em Análise
+                  </button>
+                  <button class="btn-status-action btn-approve" data-action="Aprovado" data-id="${req.id}">
+                    ✓ Aprovar Pedido
+                  </button>
+                  <button class="btn-status-action btn-reject" data-action="Recusado" data-id="${req.id}">
+                    ✕ Recusar (Mover para Não Aprovados)
+                  </button>
+                </div>
               </div>
-            </div>
-          `).join('')}
+            `;
+          }).join('')}
         </div>
       `}
+
+      <!-- POPUP / MODAL NO CANTO SUPERIOR DIREITO: LISTA DE NÃO APROVADOS & TENTATIVAS -->
+      <div id="modal-rejected-popup" class="modal-backdrop" style="display: none;">
+        <div class="modal-sheet">
+          <div class="modal-header">
+            <h3>🚫 Histórico de Não Aprovados (${rejectedRequests.length})</h3>
+            <button class="modal-close-btn" id="btn-close-rejected-popup">✕</button>
+          </div>
+          <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px;">
+            Abaixo estão os solicitantes reprovados e o histórico de quantas tentativas cada um já realizou.
+          </p>
+          <div style="max-height: 380px; overflow-y: auto;">
+            ${rejectedRequests.length === 0 ? `
+              <div style="text-align: center; padding: 24px; color: var(--text-muted); font-size: 13px;">
+                Nenhum pedido reprovado até o momento.
+              </div>
+            ` : `
+              ${rejectedRequests.map(r => {
+                const totalTentativas = countAttempts(r.userEmail);
+                return `
+                  <div class="request-card" style="border-left: 4px solid #D62828; margin-bottom: 8px;">
+                    <div class="request-card-header">
+                      <span class="request-pet-name">${r.type || 'Adoção'}: ${r.petName}</span>
+                      <span style="background: #FEE2E2; color: #DC2626; font-size: 10px; font-weight: 800; padding: 2px 6px; border-radius: 4px;">
+                        REPROVADO
+                      </span>
+                    </div>
+                    <div style="font-size: 12px; line-height: 1.5; color: var(--text-main);">
+                      <div><strong>Solicitante:</strong> ${r.userName}</div>
+                      <div><strong>CPF:</strong> ${r.userCpf || 'Não informado'}</div>
+                      <div><strong>Contato:</strong> ${r.userPhone}</div>
+                      <div><strong>Data da Recusa:</strong> ${r.date}</div>
+                      <div style="margin-top: 4px; color: #D62828; font-weight: 700;">
+                        ⚠️ Total de tentativas no app: ${totalTentativas} vez(es)
+                      </div>
+                    </div>
+                  </div>
+                `;
+              }).join('')}
+            `}
+          </div>
+        </div>
+      </div>
     `;
 
+    // Interatividade do Popup de Recusados
+    const modalRejected = container.querySelector('#modal-rejected-popup');
+    const btnOpenRejected = container.querySelector('#btn-open-rejected-popup');
+    const btnCloseRejected = container.querySelector('#btn-close-rejected-popup');
+
+    if (btnOpenRejected && modalRejected) btnOpenRejected.addEventListener('click', () => modalRejected.style.display = 'flex');
+    if (btnCloseRejected && modalRejected) btnCloseRejected.addEventListener('click', () => modalRejected.style.display = 'none');
+
+    // Ações para autorizar/recusar pets
     container.querySelectorAll('.btn-approve-pet').forEach(btn => {
       btn.addEventListener('click', () => {
         store.updateAnimalStatus(btn.dataset.id, 'Disponível');
@@ -130,6 +201,7 @@ export function renderRequestsView(container, onNavigate) {
       });
     });
 
+    // Ações de triagem (Aprovar, Análise ou Recusar)
     container.querySelectorAll('.btn-status-action:not(.btn-approve-pet):not(.btn-reject-pet)').forEach(btn => {
       btn.addEventListener('click', () => {
         const id = btn.dataset.id;
