@@ -9,7 +9,7 @@ export function renderAuthView(container, onSuccess) {
         <div class="auth-hero-banner">
           <div class="auth-hero-paw">🐾</div>
           <h2>DoaPets</h2>
-          <p>${mode === 'login' ? 'Entre para transformar a vida de um animalzinho' : 'Crie sua conta e encontre seu novo companheiro'}</p>
+          <p>${mode === 'login' ? 'Entre para transformar a vida de um animalzinho' : 'Crie seu cadastro com os dados oficiais para verificação'}</p>
         </div>
 
         <div class="auth-floating-card">
@@ -35,30 +35,37 @@ export function renderAuthView(container, onSuccess) {
           ` : `
             <form id="form-reg">
               <div class="auth-field">
-                <label class="auth-field-label">Nome Completo</label>
-                <input class="auth-field-input" type="text" id="reg-name" placeholder="Ex: Ana Souza" required>
+                <label class="auth-field-label">Nome Completo *</label>
+                <input class="auth-field-input" type="text" id="reg-name" placeholder="Nome e sobrenome" required>
               </div>
               <div class="auth-field">
-                <label class="auth-field-label">E-mail</label>
-                <input class="auth-field-input" type="email" id="reg-email" placeholder="seu@email.com" required>
+                <label class="auth-field-label">CPF *</label>
+                <input class="auth-field-input" type="text" id="reg-cpf" placeholder="000.000.000-00" required>
               </div>
               <div class="auth-field">
-                <label class="auth-field-label">WhatsApp / Telefone</label>
-                <input class="auth-field-input" type="tel" id="reg-phone" placeholder="(37) 99999-0000" required>
+                <label class="auth-field-label">Telefone Contato Real (WhatsApp) *</label>
+                <input class="auth-field-input" type="tel" id="reg-phone" placeholder="(37) 90000-0000" required>
               </div>
               <div class="auth-field">
-                <label class="auth-field-label">Cidade e Estado</label>
+                <label class="auth-field-label">Endereço Completo (Rua, Nº, Bairro) *</label>
+                <input class="auth-field-input" type="text" id="reg-address" placeholder="Ex: Rua das Flores, 120, Centro" required>
+              </div>
+              <div class="auth-field">
+                <label class="auth-field-label">Cidade e Estado *</label>
                 <input class="auth-field-input" type="text" id="reg-city" placeholder="Ex: Formiga, MG" required>
               </div>
               <div class="auth-field">
-                <label class="auth-field-label">Crie uma Senha</label>
+                <label class="auth-field-label">E-mail *</label>
+                <input class="auth-field-input" type="email" id="reg-email" placeholder="seu@email.com" required>
+              </div>
+              <div class="auth-field">
+                <label class="auth-field-label">Crie uma Senha *</label>
                 <input class="auth-field-input" type="password" id="reg-pwd" placeholder="Mínimo 6 dígitos" minlength="6" required>
               </div>
               <button type="submit" class="btn-auth-action">Concluir Cadastro</button>
             </form>
           `}
 
-          <!-- Botão de Entrada Rápida sem Cadastro (Somente Visualização) -->
           <div style="margin-top: 18px; text-align: center; border-top: 1px solid var(--border-light); padding-top: 14px;">
             <button id="btn-enter-guest" style="color: var(--color-primary); font-size: 13px; font-weight: 700; text-decoration: underline; background: none; cursor: pointer;">
               👀 Entrar como Visitante (Apenas Visualizar)
@@ -78,12 +85,14 @@ export function renderAuthView(container, onSuccess) {
       render();
     });
 
-    // Ação Visitante: Apenas Visualizar
+    // Visitante
     container.querySelector('#btn-enter-guest').addEventListener('click', () => {
       const guestUser = {
         name: "Visitante",
         email: "visitante@doapets.com",
+        cpf: "Não informado",
         phone: "Apenas visualização",
+        address: "Modo Leitura",
         city: "Modo Leitura",
         avatarUrl: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=300&auto=format&fit=crop&q=80",
         isGuest: true
@@ -94,7 +103,7 @@ export function renderAuthView(container, onSuccess) {
 
     const alertBox = container.querySelector('#auth-alert');
 
-    // Submissão Login
+    // Login
     const formLogin = container.querySelector('#form-login');
     if (formLogin) {
       formLogin.addEventListener('submit', (e) => {
@@ -111,7 +120,9 @@ export function renderAuthView(container, onSuccess) {
         const userData = {
           name: email.split('@')[0].toUpperCase(),
           email: email,
+          cpf: "Não cadastrado",
           phone: "(37) 99999-0000",
+          address: "Endereço a atualizar",
           city: "Formiga, MG",
           avatarUrl: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=300&auto=format&fit=crop&q=80",
           isGuest: false
@@ -122,21 +133,18 @@ export function renderAuthView(container, onSuccess) {
       });
     }
 
-    // Submissão Registro
+    // Registro com os 4 dados obrigatórios
     const formReg = container.querySelector('#form-reg');
     if (formReg) {
       formReg.addEventListener('submit', (e) => {
         e.preventDefault();
-        const name = container.querySelector('#reg-name').value.trim();
-        const email = container.querySelector('#reg-email').value.trim();
-        const phone = container.querySelector('#reg-phone').value.trim();
-        const city = container.querySelector('#reg-city').value.trim();
-
         const newUser = {
-          name,
-          email,
-          phone,
-          city,
+          name: container.querySelector('#reg-name').value.trim(),
+          cpf: container.querySelector('#reg-cpf').value.trim(),
+          phone: container.querySelector('#reg-phone').value.trim(),
+          address: container.querySelector('#reg-address').value.trim(),
+          city: container.querySelector('#reg-city').value.trim(),
+          email: container.querySelector('#reg-email').value.trim(),
           avatarUrl: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=300&auto=format&fit=crop&q=80",
           isGuest: false
         };

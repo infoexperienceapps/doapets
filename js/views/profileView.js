@@ -6,12 +6,13 @@ export function renderProfileView(container, onLogout) {
   const user = store.getState().currentUser || {
     name: "Visitante",
     email: "visitante@doapets.com",
+    cpf: "Não informado",
     phone: "Apenas visualização",
+    address: "Não informado",
     city: "Modo Leitura",
     avatarUrl: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=300&auto=format&fit=crop&q=80"
   };
 
-  // Filtra os pets pertencentes a este usuário
   const allAnimals = store.getState().animals;
   const myPets = !isGuest ? allAnimals.filter(pet => pet.ownerEmail === user.email) : [];
 
@@ -52,7 +53,7 @@ export function renderProfileView(container, onLogout) {
         `}
       </div>
 
-      <!-- SEÇÃO: Animais cadastrados pelo próprio tutor -->
+      <!-- Meus Animais para Doação -->
       ${!isGuest ? `
         <div class="profile-section-title">Meus Animais para Doação (${myPets.length})</div>
         <div style="margin-bottom: 16px;">
@@ -78,7 +79,8 @@ export function renderProfileView(container, onLogout) {
         </div>
       ` : ''}
 
-      <div class="profile-section-title">Dados Pessoais</div>
+      <!-- Dados Oficiais Exigidos pela ONG -->
+      <div class="profile-section-title">Dados Obrigatórios Cadastrados</div>
       <div class="profile-group-card">
         <div class="profile-item">
           <div class="profile-item-left">
@@ -92,10 +94,30 @@ export function renderProfileView(container, onLogout) {
 
         <div class="profile-item">
           <div class="profile-item-left">
+            <div class="profile-item-icon">📄</div>
+            <div class="profile-item-texts">
+              <span class="profile-item-label">CPF</span>
+              <span class="profile-item-value">${user.cpf || 'Não informado'}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="profile-item">
+          <div class="profile-item-left">
             <div class="profile-item-icon">📱</div>
             <div class="profile-item-texts">
-              <span class="profile-item-label">WhatsApp / Telefone</span>
+              <span class="profile-item-label">Telefone Contato Real</span>
               <span class="profile-item-value">${user.phone}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="profile-item">
+          <div class="profile-item-left">
+            <div class="profile-item-icon">🏠</div>
+            <div class="profile-item-texts">
+              <span class="profile-item-label">Endereço</span>
+              <span class="profile-item-value">${user.address || 'Não informado'}</span>
             </div>
           </div>
         </div>
@@ -126,20 +148,28 @@ export function renderProfileView(container, onLogout) {
       <div id="modal-edit-profile" class="modal-backdrop" style="display: none;">
         <div class="modal-sheet">
           <div class="modal-header">
-            <h3>Atualizar Cadastro</h3>
+            <h3>Atualizar Dados Pessoais</h3>
             <button class="modal-close-btn" id="btn-close-edit">✕</button>
           </div>
           <form id="form-edit-user">
             <div class="form-group-field">
-              <label>Nome Completo</label>
+              <label>Nome Completo *</label>
               <input type="text" id="edit-name" value="${user.name}" required>
             </div>
             <div class="form-group-field">
-              <label>Telefone / WhatsApp</label>
+              <label>CPF *</label>
+              <input type="text" id="edit-cpf" value="${user.cpf || ''}" required>
+            </div>
+            <div class="form-group-field">
+              <label>Telefone Contato Real (WhatsApp) *</label>
               <input type="tel" id="edit-phone" value="${user.phone}" required>
             </div>
             <div class="form-group-field">
-              <label>Cidade e Estado</label>
+              <label>Endereço Completo (Rua, Nº, Bairro) *</label>
+              <input type="text" id="edit-address" value="${user.address || ''}" required>
+            </div>
+            <div class="form-group-field">
+              <label>Cidade e Estado *</label>
               <input type="text" id="edit-city" value="${user.city}" required>
             </div>
             <div class="form-group-field">
@@ -176,7 +206,9 @@ export function renderProfileView(container, onLogout) {
       const updatedUser = {
         ...user,
         name: container.querySelector('#edit-name').value.trim(),
+        cpf: container.querySelector('#edit-cpf').value.trim(),
         phone: container.querySelector('#edit-phone').value.trim(),
+        address: container.querySelector('#edit-address').value.trim(),
         city: container.querySelector('#edit-city').value.trim(),
         avatarUrl: container.querySelector('#edit-avatar').value.trim() || user.avatarUrl
       };

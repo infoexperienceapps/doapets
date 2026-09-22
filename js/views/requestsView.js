@@ -7,7 +7,7 @@ export function renderRequestsView(container, onNavigate) {
   const requests = store.getState().requests;
   const animals = store.getState().animals;
 
-  // VISÃO 1: ADMINISTRADORES (Doapets e Oscar3)
+  // VISÃO 1: ADMINISTRADORES (Doapets e Oscar3) - Visualização completa dos 4 dados
   if (isAdmin) {
     const pendingPets = animals.filter(pet => pet.status === 'Pendente de Aprovação');
 
@@ -17,7 +17,7 @@ export function renderRequestsView(container, onNavigate) {
         <span>${requests.length} pedidos | ${pendingPets.length} pets pendentes</span>
       </div>
 
-      <!-- SEÇÃO EXCLUSIVA: Animais cadastrados por tutores aguardando liberação -->
+      <!-- Pets aguardando aprovação -->
       <h3 style="font-size: 16px; font-weight: 800; margin-bottom: 10px; color: var(--color-primary-dark);">
         🐾 Animais Aguardando Autorização da ONG (${pendingPets.length})
       </h3>
@@ -50,9 +50,9 @@ export function renderRequestsView(container, onNavigate) {
         </div>
       `}
 
-      <!-- SEÇÃO: Solicitações de Adoção e Castração -->
+      <!-- Fila de Pedidos com os 4 DADOS OBRIGATÓRIOS EM DESTAQUE -->
       <h3 style="font-size: 16px; font-weight: 800; margin-bottom: 10px; color: var(--text-main);">
-        📋 Solicitações de Adoção & Castração
+        📋 Solicitações de Tutores (Adoção & Castração)
       </h3>
 
       ${requests.length === 0 ? `
@@ -70,6 +70,15 @@ export function renderRequestsView(container, onNavigate) {
                 </span>
               </div>
 
+              <!-- BLOCO DE SEGURANÇA: DADOS PESSOAIS OBRIGATÓRIOS DO TUTOR -->
+              <div style="background: #FDF8F5; border: 1px solid var(--border-light); border-left: 4px solid var(--color-primary); border-radius: var(--radius-sm); padding: 10px 12px; margin-bottom: 10px; font-size: 12px;">
+                <div style="font-weight: 800; color: var(--color-primary-dark); margin-bottom: 4px;">👤 IDENTIFICAÇÃO DO SOLICITANTE:</div>
+                <div><strong>Nome Completo:</strong> ${req.userName}</div>
+                <div><strong>CPF:</strong> ${req.userCpf || 'Não informado no envio'}</div>
+                <div><strong>Telefone Contato Real:</strong> <span style="color: #2A9D8F; font-weight: 700;">${req.userPhone}</span></div>
+                <div><strong>Endereço Completo:</strong> ${req.userAddress || 'Não informado'}, ${req.userCity}</div>
+              </div>
+
               ${req.type === 'Castração' ? `
                 <div style="background: #FFF3E6; padding: 8px 12px; border-radius: var(--radius-sm); margin-bottom: 10px; font-size: 12px; color: var(--color-primary-dark);">
                   <strong>Modalidade:</strong> Castração Gratuita / Social<br>
@@ -81,15 +90,12 @@ export function renderRequestsView(container, onNavigate) {
                   <strong>Autodeclaração de Aptidão:</strong> ${req.isEligible === 'Sim' ? '✅ Apto' : '⚠️ Não Apto'}<br>
                   <strong>Consentimento de Consulta:</strong> ${req.dataConsent ? '✅ Autorizado' : '❌ Não autorizou'}
                 </div>
-                <div class="request-detail-line"><strong>Imóvel:</strong> ${req.housingType}</div>
+                <div class="request-detail-line"><strong>Tipo de Imóvel:</strong> ${req.housingType}</div>
                 <div class="request-detail-line"><strong>Outros Animais:</strong> ${req.hasOtherPets}</div>
               `}
 
-              <div class="request-detail-line"><strong>Solicitante:</strong> ${req.userName}</div>
-              <div class="request-detail-line"><strong>Contato:</strong> ${req.userPhone} • ${req.userEmail}</div>
-              <div class="request-detail-line"><strong>Cidade:</strong> ${req.userCity}</div>
-              <div class="request-detail-line"><strong>Observações:</strong> ${req.experience || req.notes || 'Sem observações'}</div>
-              <div class="request-detail-line"><strong>Data:</strong> ${req.date}</div>
+              <div class="request-detail-line"><strong>Observações / Rotina:</strong> ${req.experience || req.notes || 'Sem observações'}</div>
+              <div class="request-detail-line"><strong>Data do Envio:</strong> ${req.date}</div>
 
               <div class="admin-actions-bar">
                 <button class="btn-status-action btn-review" data-action="Em Análise" data-id="${req.id}">
@@ -108,11 +114,10 @@ export function renderRequestsView(container, onNavigate) {
       `}
     `;
 
-    // Ações para autorizar/recusar pets
     container.querySelectorAll('.btn-approve-pet').forEach(btn => {
       btn.addEventListener('click', () => {
         store.updateAnimalStatus(btn.dataset.id, 'Disponível');
-        alert("Animal autorizado com sucesso! Já está visível na tela inicial e na aba de animais.");
+        alert("Animal autorizado com sucesso!");
         renderRequestsView(container, onNavigate);
       });
     });
@@ -120,12 +125,11 @@ export function renderRequestsView(container, onNavigate) {
     container.querySelectorAll('.btn-reject-pet').forEach(btn => {
       btn.addEventListener('click', () => {
         store.updateAnimalStatus(btn.dataset.id, 'Recusado pela ONG');
-        alert("Publicação do animal recusada.");
+        alert("Publicação recusada.");
         renderRequestsView(container, onNavigate);
       });
     });
 
-    // Ações de triagem de adoção/castração
     container.querySelectorAll('.btn-status-action:not(.btn-approve-pet):not(.btn-reject-pet)').forEach(btn => {
       btn.addEventListener('click', () => {
         const id = btn.dataset.id;
@@ -244,7 +248,7 @@ export function renderRequestsView(container, onNavigate) {
             <div style="background: #FFFDF9; border: 1px solid var(--border-light); padding: 12px; border-radius: var(--radius-sm); margin-top: 14px;">
               <label style="display: flex; align-items: flex-start; gap: 8px; font-size: 12px; color: var(--text-main); cursor: pointer;">
                 <input type="checkbox" id="req-consent" required style="margin-top: 2px;">
-                <span>Autorizo a equipe da <strong>DoaPets</strong> a validar meus dados cadastrais e realizar contato para confirmação da adoção.</span>
+                <span>Declaro que meus dados cadastrados (<strong>Nome, CPF, Endereço e Telefone Real</strong>) são verdadeiros e autorizo a consulta pela ONG.</span>
               </label>
             </div>
 
@@ -343,9 +347,11 @@ export function renderRequestsView(container, onNavigate) {
         id: "ADOPT-" + Math.floor(1000 + Math.random() * 9000),
         type: "Adoção",
         userName: user.name,
-        userEmail: user.email,
+        userCpf: user.cpf || "Pendente de atualização",
         userPhone: user.phone || "(00) 00000-0000",
+        userAddress: user.address || "Pendente de atualização",
         userCity: user.city || "Não informado",
+        userEmail: user.email,
         petName: container.querySelector('#req-pet').value,
         isEligible: container.querySelector('#req-eligible').value,
         dataConsent: container.querySelector('#req-consent').checked,
@@ -357,7 +363,7 @@ export function renderRequestsView(container, onNavigate) {
       };
 
       store.addRequest(newRequest);
-      alert("Solicitação de Adoção enviada com sucesso!");
+      alert("Solicitação de Adoção enviada com sucesso! A ONG recebeu seus dados completos.");
       renderRequestsView(container, onNavigate);
     });
   }
@@ -370,9 +376,11 @@ export function renderRequestsView(container, onNavigate) {
         id: "CAST-" + Math.floor(1000 + Math.random() * 9000),
         type: "Castração",
         userName: user.name,
-        userEmail: user.email,
+        userCpf: user.cpf || "Pendente de atualização",
         userPhone: user.phone || "(00) 00000-0000",
+        userAddress: user.address || "Pendente de atualização",
         userCity: user.city || "Não informado",
+        userEmail: user.email,
         petName: container.querySelector('#cast-pet-name').value.trim(),
         species: container.querySelector('#cast-species').value,
         sex: container.querySelector('#cast-sex').value,
@@ -384,7 +392,7 @@ export function renderRequestsView(container, onNavigate) {
       };
 
       store.addRequest(newCastRequest);
-      alert("Solicitação de Castração cadastrada com sucesso! A ONG analisará os dados.");
+      alert("Solicitação de Castração cadastrada com sucesso! A ONG recebeu seus dados completos.");
       renderRequestsView(container, onNavigate);
     });
   }
