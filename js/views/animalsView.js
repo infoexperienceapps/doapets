@@ -1,28 +1,42 @@
 ﻿import { store } from '../services/store.js';
 
 export function renderAnimalsView(container, onNavigate) {
-  const animals = store.getState().animals;
+  const isAdmin = store.isAdmin();
+  const isGuest = store.isGuest();
+  const user = store.getState().currentUser;
+  
+  // Na vitrine geral aparecem apenas os pets Aprovados (ou todos para a administração)
+  const allAnimals = store.getState().animals;
+  const animals = isAdmin 
+    ? allAnimals 
+    : allAnimals.filter(pet => pet.status === 'Disponível' || pet.status === 'Aprovado');
 
   container.innerHTML = `
     <div class="home-top-bar">
       <div>
-        <h2 class="home-top-title">Todos os Animais</h2>
-        <span style="font-size: 12px; color: var(--text-muted);">${animals.length} cadastrados na ONG</span>
+        <h2 class="home-top-title">Animais para Adoção</h2>
+        <span style="font-size: 12px; color: var(--text-muted);">${animals.length} disponíveis</span>
       </div>
-      <button class="btn-add-pet" id="btn-open-add-pet" title="Cadastrar novo animal">+</button>
+      ${!isGuest ? `
+        <button class="btn-add-pet" id="btn-open-add-pet-animals" title="Cadastrar animal">+</button>
+      ` : ''}
     </div>
 
-    <div id="pets-container">
+    <div id="pets-container-animals">
       ${animals.length === 0 ? `
         <div class="empty-pets-notice">
-          <p>Nenhum animal cadastrado no momento.</p>
-          <button class="btn-adopt-this" id="btn-empty-add" style="display:inline-block; width:auto; padding: 10px 20px;">
-            + Cadastrar Primeiro Animal
-          </button>
+          <p>Nenhum animal publicado no momento.</p>
+          ${!isGuest ? `
+            <button class="btn-send-request" id="btn-empty-add-animals" style="width: auto; padding: 10px 22px; margin-top: 10px; display: inline-block;">
+              + Cadastrar Primeiro Animal
+            </button>
+          ` : `
+            <p style="font-size: 12px; color: var(--color-primary); margin-top: 6px;">Entre com uma conta para solicitar publicação de animais.</p>
+          `}
         </div>
       ` : `
         ${animals.map(pet => `
-          <div class="pet-full-card" data-id="${pet.id}">
+          <div class="pet-full-card">
             <div class="pet-card-image-box">
               <img src="${pet.photoUrl}" alt="${pet.name}" loading="lazy">
               <span class="pet-card-badge">${pet.status || 'Disponível'}</span>
@@ -31,7 +45,10 @@ export function renderAnimalsView(container, onNavigate) {
               <h3 class="pet-card-name">${pet.name}</h3>
               <div class="pet-card-tags">${pet.species} • ${pet.age} • ${pet.sex} • Porte ${pet.size}</div>
               <p class="pet-card-desc">${pet.description}</p>
-              <button class="btn-adopt-this btn-request-adopt" data-pet-name="${pet.name}">
+              <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 10px;">
+                Cadastrado por: <strong>${pet.ownerName || 'ONG DoaPets'}</strong>
+              </div>
+              <button class="btn-send-request btn-request-adopt" data-pet-name="${pet.name}" style="margin-top:0;">
                 Solicitar Adoção de ${pet.name}
               </button>
             </div>
@@ -40,95 +57,110 @@ export function renderAnimalsView(container, onNavigate) {
       `}
     </div>
 
-    <!-- Modal de Cadastro Preservado -->
-    <div id="modal-add-pet" class="modal-backdrop" style="display: none;">
-      <div class="modal-sheet">
-        <div class="modal-header">
-          <h3>Cadastrar Animal</h3>
-          <button class="modal-close-btn" id="btn-close-pet-modal">✕</button>
-        </div>
-        <form id="form-new-pet">
-          <div class="form-group">
-            <label class="form-label">Nome do Animal</label>
-            <input class="form-input" type="text" id="pet-name" placeholder="Ex: Bob" required>
+    <!-- Modal Adicionar Animal com CSS robusto e alinhado -->
+    ${!isGuest ? `
+      <div id="modal-add-pet-animals" class="modal-backdrop" style="display: none;">
+        <div class="modal-sheet">
+          <div class="modal-header">
+            <h3>Cadastrar Animal para Adoção</h3>
+            <button class="modal-close-btn" id="btn-close-pet-modal-animals">✕</button>
           </div>
-          <div class="form-group">
-            <label class="form-label">URL da Foto Real</label>
-            <input class="form-input" type="url" id="pet-photo" placeholder="https://..." required>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Espécie</label>
-            <select class="form-input" id="pet-species" required>
-              <option value="Cachorro">Cachorro</option>
-              <option value="Gato">Gato</option>
-              <option value="Outro">Outro</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Idade e Sexo</label>
-            <div style="display: flex; gap: 8px;">
-              <input class="form-input" type="text" id="pet-age" placeholder="Ex: 2 anos" required>
-              <select class="form-input" id="pet-sex" required>
-                <option value="Macho">Macho</option>
-                <option value="Fêmea">Fêmea</option>
+          <form id="form-new-pet-animals">
+            <div class="form-group-field">
+              <label>Nome do Animal</label>
+              <input type="text" id="pet-name-a" placeholder="Ex: Bob" required>
+            </div>
+            <div class="form-group-field">
+              <label>URL da Foto Real</label>
+              <input type="url" id="pet-photo-a" placeholder="https://..." required>
+            </div>
+            <div class="form-group-field">
+              <label>Espécie</label>
+              <select id="pet-species-a" required>
+                <option value="Cachorro">Cachorro</option>
+                <option value="Gato">Gato</option>
+                <option value="Outro">Outro</option>
               </select>
             </div>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Porte</label>
-            <select class="form-input" id="pet-size" required>
-              <option value="Pequeno">Pequeno</option>
-              <option value="Médio">Médio</option>
-              <option value="Grande">Grande</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label class="form-label">História / Cuidados / Castrado?</label>
-            <textarea class="form-input" id="pet-desc" rows="2" placeholder="Ex: Dócil, vacinado, se dá bem com crianças..." required style="resize:none;"></textarea>
-          </div>
-          <button type="submit" class="btn-save-modal">Salvar e Publicar</button>
-        </form>
+            <div class="form-group-field">
+              <label>Idade e Sexo</label>
+              <div style="display: flex; gap: 8px;">
+                <input type="text" id="pet-age-a" placeholder="Ex: 2 anos" required>
+                <select id="pet-sex-a" required>
+                  <option value="Macho">Macho</option>
+                  <option value="Fêmea">Fêmea</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-group-field">
+              <label>Porte</label>
+              <select id="pet-size-a" required>
+                <option value="Pequeno">Pequeno</option>
+                <option value="Médio">Médio</option>
+                <option value="Grande">Grande</option>
+              </select>
+            </div>
+            <div class="form-group-field">
+              <label>História / Cuidados / Castrado?</label>
+              <textarea id="pet-desc-a" rows="2" placeholder="Dócil, castrado, vacinado..." required style="resize:none;"></textarea>
+            </div>
+            
+            ${!isAdmin ? `
+              <div style="background: #FFF3E6; border: 1px solid var(--border-light); border-radius: var(--radius-sm); padding: 10px; margin-top: 10px; font-size: 11px; color: var(--color-primary-dark);">
+                ℹ️ Seu animal será enviado para análise da equipe da <strong>DoaPets</strong>. Enquanto aguarda aprovação, você poderá visualizá-lo em seu perfil.
+              </div>
+            ` : ''}
+
+            <button type="submit" class="btn-send-request" style="margin-top: 12px;">
+              ${isAdmin ? 'Publicar Imediatamente' : 'Enviar para Aprovação da ONG'}
+            </button>
+          </form>
+        </div>
       </div>
-    </div>
+    ` : ''}
   `;
 
-  const modal = container.querySelector('#modal-add-pet');
-  const btnOpen = container.querySelector('#btn-open-add-pet');
-  const btnEmptyAdd = container.querySelector('#btn-empty-add');
-  const btnClose = container.querySelector('#btn-close-pet-modal');
-  const form = container.querySelector('#form-new-pet');
+  const modal = container.querySelector('#modal-add-pet-animals');
+  const btnOpen = container.querySelector('#btn-open-add-pet-animals');
+  const btnEmpty = container.querySelector('#btn-empty-add-animals');
+  const btnClose = container.querySelector('#btn-close-pet-modal-animals');
+  const form = container.querySelector('#form-new-pet-animals');
 
-  const openModal = () => { modal.style.display = 'flex'; };
-  const closeModal = () => { modal.style.display = 'none'; };
+  const openM = () => { if (modal) modal.style.display = 'flex'; };
+  const closeM = () => { if (modal) modal.style.display = 'none'; };
 
-  if (btnOpen) btnOpen.addEventListener('click', openModal);
-  if (btnEmptyAdd) btnEmptyAdd.addEventListener('click', openModal);
-  if (btnClose) btnClose.addEventListener('click', closeModal);
+  if (btnOpen) btnOpen.addEventListener('click', openM);
+  if (btnEmpty) btnEmpty.addEventListener('click', openM);
+  if (btnClose) btnClose.addEventListener('click', closeM);
 
   if (form) {
     form.addEventListener('submit', (e) => {
       e.preventDefault();
+      const statusInicial = isAdmin ? "Disponível" : "Pendente de Aprovação";
+      
       const newAnimal = {
         id: "pet-" + Date.now(),
-        name: container.querySelector('#pet-name').value.trim(),
-        photoUrl: container.querySelector('#pet-photo').value.trim(),
-        species: container.querySelector('#pet-species').value,
-        age: container.querySelector('#pet-age').value.trim(),
-        sex: container.querySelector('#pet-sex').value,
-        size: container.querySelector('#pet-size').value,
-        description: container.querySelector('#pet-desc').value.trim(),
-        status: "Disponível"
+        name: container.querySelector('#pet-name-a').value.trim(),
+        photoUrl: container.querySelector('#pet-photo-a').value.trim(),
+        species: container.querySelector('#pet-species-a').value,
+        age: container.querySelector('#pet-age-a').value.trim(),
+        sex: container.querySelector('#pet-sex-a').value,
+        size: container.querySelector('#pet-size-a').value,
+        description: container.querySelector('#pet-desc-a').value.trim(),
+        status: statusInicial,
+        ownerEmail: user ? user.email : '',
+        ownerName: user ? user.name : 'ONG DoaPets',
+        date: new Date().toLocaleDateString('pt-BR')
       };
 
       store.addAnimal(newAnimal);
-      closeModal();
+      closeM();
+      alert(isAdmin ? "Animal publicado com sucesso!" : "Animal cadastrado! Ele já está visível no seu Perfil e aguarda autorização da ONG para aparecer na lista pública.");
       renderAnimalsView(container, onNavigate);
     });
   }
 
   container.querySelectorAll('.btn-request-adopt').forEach(btn => {
-    btn.addEventListener('click', () => {
-      if (onNavigate) onNavigate('requests');
-    });
+    btn.addEventListener('click', () => onNavigate('requests'));
   });
 }

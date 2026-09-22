@@ -11,6 +11,10 @@ export function renderProfileView(container, onLogout) {
     avatarUrl: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=300&auto=format&fit=crop&q=80"
   };
 
+  // Filtra os pets pertencentes a este usuário
+  const allAnimals = store.getState().animals;
+  const myPets = !isGuest ? allAnimals.filter(pet => pet.ownerEmail === user.email) : [];
+
   container.innerHTML = `
     <div class="profile-view-wrapper">
       <div class="profile-header-card">
@@ -48,14 +52,50 @@ export function renderProfileView(container, onLogout) {
         `}
       </div>
 
-      <div class="profile-section-title">Dados de Acesso</div>
+      <!-- SEÇÃO: Animais cadastrados pelo próprio tutor -->
+      ${!isGuest ? `
+        <div class="profile-section-title">Meus Animais para Doação (${myPets.length})</div>
+        <div style="margin-bottom: 16px;">
+          ${myPets.length === 0 ? `
+            <div style="background: var(--bg-surface); border: 1px solid var(--border-light); border-radius: var(--radius-md); padding: 14px; text-align: center; font-size: 12px; color: var(--text-muted);">
+              Você ainda não cadastrou nenhum animal para doação.
+            </div>
+          ` : `
+            ${myPets.map(pet => `
+              <div class="request-card" style="margin-bottom: 8px;">
+                <div class="request-card-header">
+                  <span class="request-pet-name">🐾 ${pet.name}</span>
+                  <span class="status-badge ${pet.status === 'Disponível' || pet.status === 'Aprovado' ? 'status-aprovado' : 'status-pendente'}">
+                    ${pet.status}
+                  </span>
+                </div>
+                <div class="request-detail-line"><strong>Espécie e Sexo:</strong> ${pet.species} • ${pet.sex} (${pet.age})</div>
+                <div class="request-detail-line"><strong>Status na ONG:</strong> ${pet.status === 'Disponível' || pet.status === 'Aprovado' ? '✅ Aprovado e visível na vitrine' : '⏳ Aguardando autorização da ONG'}</div>
+                <div class="request-detail-line"><strong>Data do Cadastro:</strong> ${pet.date}</div>
+              </div>
+            `).join('')}
+          `}
+        </div>
+      ` : ''}
+
+      <div class="profile-section-title">Dados Pessoais</div>
       <div class="profile-group-card">
         <div class="profile-item">
           <div class="profile-item-left">
             <div class="profile-item-icon">👤</div>
             <div class="profile-item-texts">
-              <span class="profile-item-label">Status da Conta</span>
-              <span class="profile-item-value">${isGuest ? 'Visitante (Sem permissão de escrita)' : 'Usuário Autenticado'}</span>
+              <span class="profile-item-label">Nome Completo</span>
+              <span class="profile-item-value">${user.name}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="profile-item">
+          <div class="profile-item-left">
+            <div class="profile-item-icon">📱</div>
+            <div class="profile-item-texts">
+              <span class="profile-item-label">WhatsApp / Telefone</span>
+              <span class="profile-item-value">${user.phone}</span>
             </div>
           </div>
         </div>
@@ -64,7 +104,7 @@ export function renderProfileView(container, onLogout) {
           <div class="profile-item-left">
             <div class="profile-item-icon">📍</div>
             <div class="profile-item-texts">
-              <span class="profile-item-label">Cidade</span>
+              <span class="profile-item-label">Cidade e Estado</span>
               <span class="profile-item-value">${user.city}</span>
             </div>
           </div>
@@ -81,7 +121,7 @@ export function renderProfileView(container, onLogout) {
       </button>
     </div>
 
-    <!-- Modal Editar Dados (Apenas para usuário logado de verdade) -->
+    <!-- Modal Editar Dados -->
     ${!isGuest ? `
       <div id="modal-edit-profile" class="modal-backdrop" style="display: none;">
         <div class="modal-sheet">

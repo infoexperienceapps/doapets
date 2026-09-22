@@ -63,6 +63,14 @@
     this.setState({ animals: [newAnimal, ...this.state.animals] });
   }
 
+  updateAnimalStatus(id, newStatus) {
+    const updated = this.state.animals.map(pet => {
+      if (pet.id === id) return { ...pet, status: newStatus };
+      return pet;
+    });
+    this.setState({ animals: updated });
+  }
+
   addNews(item) {
     this.setState({ news: [item, ...this.state.news] });
   }

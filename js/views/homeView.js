@@ -3,7 +3,13 @@
 export function renderHomeView(container, onNavigate) {
   const isAdmin = store.isAdmin();
   const isGuest = store.isGuest();
-  const animals = store.getState().animals;
+  const user = store.getState().currentUser;
+  
+  const allAnimals = store.getState().animals;
+  const animals = isAdmin 
+    ? allAnimals 
+    : allAnimals.filter(pet => pet.status === 'Disponível' || pet.status === 'Aprovado');
+
   const newsList = store.getState().news || [];
 
   container.innerHTML = `
@@ -58,9 +64,9 @@ export function renderHomeView(container, onNavigate) {
     <div id="pets-container">
       ${animals.length === 0 ? `
         <div class="empty-pets-notice">
-          <p>Nenhum animal cadastrado no momento.</p>
+          <p>Nenhum animal publicado no momento.</p>
           ${!isGuest ? `
-            <button class="btn-adopt-this" id="btn-empty-add" style="display:inline-block; width:auto; padding: 10px 20px; margin-top: 8px;">
+            <button class="btn-send-request" id="btn-empty-add" style="width: auto; padding: 10px 22px; margin-top: 10px; display: inline-block;">
               + Cadastrar Primeiro Animal
             </button>
           ` : `
@@ -78,7 +84,7 @@ export function renderHomeView(container, onNavigate) {
               <h3 class="pet-card-name">${pet.name}</h3>
               <div class="pet-card-tags">${pet.species} • ${pet.age} • ${pet.sex} • Porte ${pet.size}</div>
               <p class="pet-card-desc">${pet.description}</p>
-              <button class="btn-adopt-this btn-request-adopt" data-pet-name="${pet.name}">
+              <button class="btn-send-request btn-request-adopt" data-pet-name="${pet.name}" style="margin-top:0;">
                 Solicitar Adoção de ${pet.name}
               </button>
             </div>
@@ -134,7 +140,16 @@ export function renderHomeView(container, onNavigate) {
               <label>História / Temperamento</label>
               <textarea id="pet-desc" rows="2" placeholder="Dócil, castrado, vacinado..." required style="resize:none;"></textarea>
             </div>
-            <button type="submit" class="btn-send-request">Salvar e Publicar</button>
+            
+            ${!isAdmin ? `
+              <div style="background: #FFF3E6; border: 1px solid var(--border-light); border-radius: var(--radius-sm); padding: 10px; margin-top: 10px; font-size: 11px; color: var(--color-primary-dark);">
+                ℹ️ O animal será submetido para avaliação da ONG. Você poderá acompanhá-lo no seu Perfil.
+              </div>
+            ` : ''}
+
+            <button type="submit" class="btn-send-request" style="margin-top: 12px;">
+              ${isAdmin ? 'Publicar Imediatamente' : 'Enviar para Aprovação da ONG'}
+            </button>
           </form>
         </div>
       </div>
@@ -185,6 +200,8 @@ export function renderHomeView(container, onNavigate) {
   if (formPet) {
     formPet.addEventListener('submit', (e) => {
       e.preventDefault();
+      const statusInicial = isAdmin ? "Disponível" : "Pendente de Aprovação";
+
       const newAnimal = {
         id: "pet-" + Date.now(),
         name: container.querySelector('#pet-name').value.trim(),
@@ -194,10 +211,14 @@ export function renderHomeView(container, onNavigate) {
         sex: container.querySelector('#pet-sex').value,
         size: container.querySelector('#pet-size').value,
         description: container.querySelector('#pet-desc').value.trim(),
-        status: "Disponível"
+        status: statusInicial,
+        ownerEmail: user ? user.email : '',
+        ownerName: user ? user.name : 'ONG DoaPets',
+        date: new Date().toLocaleDateString('pt-BR')
       };
       store.addAnimal(newAnimal);
       modalPet.style.display = 'none';
+      alert(isAdmin ? "Animal publicado com sucesso!" : "Animal cadastrado! Ele já está visível no seu Perfil e aguarda autorização da ONG para aparecer na lista pública.");
       renderHomeView(container, onNavigate);
     });
   }
