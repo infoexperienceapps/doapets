@@ -1,0 +1,155 @@
+﻿.home-top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.home-top-title {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--text-main);
+}
+
+.btn-add-pet {
+  width: 38px;
+  height: 38px;
+  background-color: var(--color-primary);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  font-weight: 600;
+  box-shadow: var(--shadow-btn);
+  cursor: pointer;
+}
+
+.btn-add-pet:active {
+  transform: scale(0.92);
+}
+
+/* Hero Acolhedor da Home */
+.home-hero {
+  background: linear-gradient(135deg, #F77F00 0%, #D62828 100%);
+  color: white;
+  border-radius: var(--radius-lg);
+  padding: 22px 18px;
+  margin-bottom: 18px;
+  box-shadow: 0 8px 20px rgba(247, 127, 0, 0.25);
+}
+
+.home-hero h2 {
+  font-size: 19px;
+  font-weight: 800;
+  margin-bottom: 4px;
+}
+
+.home-hero p {
+  font-size: 13px;
+  opacity: 0.95;
+  margin-bottom: 16px;
+}
+
+.btn-hero-action {
+  background-color: white;
+  color: var(--color-primary-dark);
+  font-weight: 700;
+  font-size: 13px;
+  padding: 10px 18px;
+  border-radius: var(--radius-full);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+/* Card do Pet */
+.pet-full-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  box-shadow: var(--shadow-card);
+  margin-bottom: 16px;
+}
+
+.pet-card-image-box {
+  width: 100%;
+  height: 190px;
+  position: relative;
+  background: #EAEAEA;
+}
+
+.pet-card-image-box img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.pet-card-badge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: rgba(247, 127, 0, 0.95);
+  color: white;
+  padding: 4px 12px;
+  border-radius: var(--radius-full);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.pet-card-content {
+  padding: 14px 16px;
+}
+
+.pet-card-name {
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--text-main);
+  margin-bottom: 3px;
+}
+
+.pet-card-tags {
+  font-size: 12px;
+  color: var(--color-primary);
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.pet-card-desc {
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.4;
+  margin-bottom: 12px;
+}
+
+.btn-adopt-this {
+  width: 100%;
+  background: var(--color-primary);
+  color: white;
+  font-weight: 700;
+  font-size: 13px;
+  padding: 11px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  text-align: center;
+  box-shadow: var(--shadow-btn);
+}
+
+.btn-adopt-this:active {
+  transform: scale(0.98);
+  opacity: 0.9;
+}
+
+.empty-pets-notice {
+  text-align: center;
+  padding: 36px 16px;
+  background: var(--bg-surface);
+  border: 1px dashed var(--border-light);
+  border-radius: var(--radius-md);
+  color: var(--text-muted);
+  font-size: 13px;
+}

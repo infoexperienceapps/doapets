@@ -1,0 +1,138 @@
+﻿.auth-wrapper {
+  padding: 8px 4px 20px;
+}
+
+/* Banner de Entrada Acolhedor */
+.auth-hero-banner {
+  background: linear-gradient(135deg, #F77F00 0%, #D62828 100%);
+  border-radius: var(--radius-lg);
+  padding: 30px 20px;
+  color: white;
+  text-align: center;
+  box-shadow: 0 10px 25px rgba(247, 127, 0, 0.25);
+  margin-bottom: -25px;
+  position: relative;
+  z-index: 1;
+}
+
+.auth-hero-paw {
+  font-size: 42px;
+  margin-bottom: 6px;
+  display: inline-block;
+}
+
+.auth-hero-banner h2 {
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  margin-bottom: 4px;
+}
+
+.auth-hero-banner p {
+  font-size: 13px;
+  opacity: 0.95;
+}
+
+/* Cartão Flutuante de Login */
+.auth-floating-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  padding: 35px 20px 24px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
+  position: relative;
+  z-index: 2;
+}
+
+/* Abas Alternáveis */
+.auth-pill-switch {
+  display: flex;
+  background: #F3EAE3;
+  border-radius: var(--radius-full);
+  padding: 4px;
+  margin-bottom: 22px;
+}
+
+.pill-btn {
+  flex: 1;
+  padding: 11px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-muted);
+  border-radius: var(--radius-full);
+  transition: all 0.25s ease;
+  text-align: center;
+}
+
+.pill-btn.active {
+  background: white;
+  color: var(--color-primary);
+  box-shadow: 0 4px 10px rgba(247, 127, 0, 0.15);
+}
+
+/* Campos de Entrada */
+.auth-field {
+  margin-bottom: 16px;
+}
+
+.auth-field-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-main);
+  margin-bottom: 6px;
+}
+
+.auth-field-input {
+  width: 100%;
+  padding: 13px 15px;
+  border: 1.5px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  color: var(--text-main);
+  background: #FFFDFB;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.auth-field-input:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(247, 127, 0, 0.15);
+  background: white;
+}
+
+/* Botão de Ação Laranja */
+.btn-auth-action {
+  width: 100%;
+  background: linear-gradient(135deg, #F77F00 0%, #D62828 100%);
+  color: white;
+  font-size: 15px;
+  font-weight: 700;
+  padding: 14px;
+  border-radius: var(--radius-sm);
+  margin-top: 10px;
+  box-shadow: 0 6px 16px rgba(247, 127, 0, 0.35);
+  transition: transform 0.15s ease, opacity 0.15s ease;
+}
+
+.btn-auth-action:active {
+  transform: scale(0.98);
+  opacity: 0.9;
+}
+
+/* Alertas */
+.auth-alert-box {
+  display: none;
+  padding: 10px;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  margin-bottom: 14px;
+  text-align: center;
+}
+
+.auth-alert-box.error {
+  display: block;
+  background: #FEE2E2;
+  color: #DC2626;
+  border: 1px solid #FCA5A5;
+}

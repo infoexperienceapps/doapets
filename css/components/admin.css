@@ -1,0 +1,153 @@
+﻿/* Formulário Oficial de Adoção Formatado */
+.adoption-form-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  padding: 18px 16px;
+  box-shadow: var(--shadow-card);
+  margin-top: 16px;
+}
+
+.adoption-form-card h3 {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--color-primary-dark);
+  margin-bottom: 14px;
+}
+
+.form-group-field {
+  margin-bottom: 14px;
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group-field label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-main);
+  margin-bottom: 6px;
+}
+
+.form-group-field input,
+.form-group-field select,
+.form-group-field textarea {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1.5px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  color: var(--text-main);
+  background: #FFFDFB;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.form-group-field input:focus,
+.form-group-field select:focus,
+.form-group-field textarea:focus {
+  border-color: var(--color-primary);
+  background: white;
+}
+
+.btn-send-request {
+  width: 100%;
+  background: linear-gradient(135deg, #F77F00 0%, #D62828 100%);
+  color: white;
+  font-size: 14px;
+  font-weight: 800;
+  padding: 13px;
+  border-radius: var(--radius-sm);
+  margin-top: 6px;
+  cursor: pointer;
+  box-shadow: var(--shadow-btn);
+}
+
+.btn-send-request:active {
+  transform: scale(0.98);
+  opacity: 0.9;
+}
+
+/* Card de Pedido de Adoção */
+.request-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  margin-bottom: 14px;
+  box-shadow: var(--shadow-card);
+}
+
+.request-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px dashed var(--border-light);
+}
+
+.request-pet-name {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--color-primary);
+}
+
+.status-badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: var(--radius-full);
+  text-transform: uppercase;
+}
+
+.status-pendente { background: #FFF3CD; color: #856404; }
+.status-em-analise, .status-analise { background: #CCE5FF; color: #004085; }
+.status-aprovado { background: #D4EDDA; color: #155724; }
+.status-recusado { background: #F8D7DA; color: #721C24; }
+
+.request-detail-line {
+  font-size: 13px;
+  color: var(--text-main);
+  margin-bottom: 4px;
+}
+
+.request-detail-line strong {
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+/* Painel Admin (Doapets e Oscar3) */
+.admin-badge-banner {
+  background: #2B2D42;
+  color: white;
+  padding: 12px 16px;
+  border-radius: var(--radius-md);
+  margin-bottom: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.admin-actions-bar {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border-light);
+}
+
+.btn-status-action {
+  font-size: 12px;
+  font-weight: 700;
+  padding: 10px 8px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  text-align: center;
+}
+
+.btn-approve { background: #2A9D8F; color: white; }
+.btn-reject { background: #D62828; color: white; }
+.btn-review { background: #4A90E2; color: white; grid-column: span 2; }
