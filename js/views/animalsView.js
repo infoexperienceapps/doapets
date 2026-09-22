@@ -6,7 +6,6 @@ export function renderAnimalsView(container, onNavigate) {
   const user = store.getState().currentUser;
   
   const allAnimals = store.getState().animals;
-  // Decrescente: o mais novo cadastrado aparece no topo
   const animals = (isAdmin 
     ? allAnimals 
     : allAnimals.filter(pet => pet.status === 'Disponível' || pet.status === 'Aprovado')
@@ -16,14 +15,13 @@ export function renderAnimalsView(container, onNavigate) {
     <div class="home-top-bar">
       <div>
         <h2 class="home-top-title">Todos os Animais</h2>
-        <span style="font-size: 12px; color: var(--text-muted);">${animals.length} disponíveis para adoção</span>
+        <span style="font-size: 12px; color: var(--text-muted);">${animals.length} disponíveis</span>
       </div>
       ${!isGuest ? `
         <button class="btn-add-pet" id="btn-open-add-pet-animals" title="Cadastrar animal">+</button>
       ` : ''}
     </div>
 
-    <!-- Lista Decrescente com foto oval menor e informações à direita -->
     <div id="pets-container-animals" style="overflow-y: auto; padding-bottom: 10px;">
       ${animals.length === 0 ? `
         <div class="empty-pets-notice">
@@ -61,7 +59,7 @@ export function renderAnimalsView(container, onNavigate) {
                   }
                 </div>
                 <div style="font-size: 11px; color: var(--color-primary); font-weight: 700; margin-top: 4px;">
-                  🔍 Toque para ver detalhes
+                  🔍 Toque para ver detalhes / gerenciar
                 </div>
               </div>
             </div>
@@ -70,7 +68,7 @@ export function renderAnimalsView(container, onNavigate) {
       `}
     </div>
 
-    <!-- POPUP DETALHADO DO ANIMAL AO CLICAR -->
+    <!-- POPUP DETALHADO DO ANIMAL AO CLICAR (COM OPÇÕES DE EDITAR E EXCLUIR PARA ONG/DONO) -->
     <div id="modal-pet-details" class="modal-backdrop" style="display: none;">
       <div class="modal-sheet">
         <div class="modal-header">
@@ -78,13 +76,62 @@ export function renderAnimalsView(container, onNavigate) {
           <button class="modal-close-btn" id="btn-close-pet-details">✕</button>
         </div>
         
-        <div id="detail-pet-body" style="max-height: 400px; overflow-y: auto;">
-          <!-- Renderizado via JS com todas as informações -->
-        </div>
+        <div id="detail-pet-body" style="max-height: 380px; overflow-y: auto;"></div>
 
-        <button type="button" class="btn-send-request" id="btn-adopt-from-modal" style="margin-top: 14px;">
-          Quero Adotar Este Pet
-        </button>
+        <!-- Botões de Ação Dinâmicos -->
+        <div id="detail-pet-actions" style="margin-top: 14px; display: flex; flex-direction: column; gap: 8px;"></div>
+      </div>
+    </div>
+
+    <!-- Modal Editar Pet -->
+    <div id="modal-edit-pet" class="modal-backdrop" style="display: none;">
+      <div class="modal-sheet">
+        <div class="modal-header">
+          <h3>Editar Dados do Animal</h3>
+          <button class="modal-close-btn" id="btn-close-edit-pet">✕</button>
+        </div>
+        <form id="form-edit-pet">
+          <input type="hidden" id="edit-pet-id">
+          <div class="form-group-field">
+            <label>Nome do Animal *</label>
+            <input type="text" id="edit-pet-name" required>
+          </div>
+          <div class="form-group-field">
+            <label>URL da Foto Real *</label>
+            <input type="url" id="edit-pet-photo" required>
+          </div>
+          <div class="form-group-field">
+            <label>Espécie *</label>
+            <select id="edit-pet-species" required>
+              <option value="Cachorro">Cachorro</option>
+              <option value="Gato">Gato</option>
+              <option value="Outro">Outro</option>
+            </select>
+          </div>
+          <div class="form-group-field">
+            <label>Idade e Sexo *</label>
+            <div style="display: flex; gap: 8px;">
+              <input type="text" id="edit-pet-age" required style="flex: 1;">
+              <select id="edit-pet-sex" required style="flex: 1;">
+                <option value="Macho">Macho</option>
+                <option value="Fêmea">Fêmea</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group-field">
+            <label>Porte *</label>
+            <select id="edit-pet-size" required>
+              <option value="Pequeno">Pequeno</option>
+              <option value="Médio">Médio</option>
+              <option value="Grande">Grande</option>
+            </select>
+          </div>
+          <div class="form-group-field">
+            <label>História / Cuidados / Castrado? *</label>
+            <textarea id="edit-pet-desc" rows="3" required style="resize:none;"></textarea>
+          </div>
+          <button type="submit" class="btn-send-request" style="margin-top: 12px;">Salvar Alterações</button>
+        </form>
       </div>
     </div>
 
@@ -151,14 +198,19 @@ export function renderAnimalsView(container, onNavigate) {
     ` : ''}
   `;
 
-  // Interatividade do Pop-up de Detalhes do Pet
+  // Interatividade do Pop-up Detalhado
   const modalDetail = container.querySelector('#modal-pet-details');
   const btnCloseDetail = container.querySelector('#btn-close-pet-details');
-  const btnAdoptModal = container.querySelector('#btn-adopt-from-modal');
   const detailTitle = container.querySelector('#detail-pet-name');
   const detailBody = container.querySelector('#detail-pet-body');
+  const detailActions = container.querySelector('#detail-pet-actions');
 
-  let selectedPetName = '';
+  const modalEdit = container.querySelector('#modal-edit-pet');
+  const btnCloseEdit = container.querySelector('#btn-close-edit-pet');
+  const formEdit = container.querySelector('#form-edit-pet');
+
+  if (btnCloseDetail) btnCloseDetail.addEventListener('click', () => modalDetail.style.display = 'none');
+  if (btnCloseEdit) btnCloseEdit.addEventListener('click', () => modalEdit.style.display = 'none');
 
   container.querySelectorAll('.pet-horizontal-card').forEach(card => {
     card.addEventListener('click', () => {
@@ -166,7 +218,7 @@ export function renderAnimalsView(container, onNavigate) {
       const pet = animals[idx];
       if (!pet) return;
 
-      selectedPetName = pet.name;
+      const canManage = isAdmin || (user && pet.ownerEmail === user.email);
       const isFromOng = (pet.ownerName || '').toLowerCase().includes('ong') || 
                         (pet.ownerName || '').toLowerCase().includes('doapets') ||
                         (pet.ownerEmail || '').toLowerCase().includes('ong3');
@@ -190,43 +242,110 @@ export function renderAnimalsView(container, onNavigate) {
           </div>
         </div>
 
-        <div style="font-size: 13px; color: var(--text-main); line-height: 1.5; padding: 0 4px;">
+        <div style="font-size: 13px; color: var(--text-main); line-height: 1.5;">
           <strong>Histórico e Cuidados:</strong><br>
           ${pet.description}
         </div>
       `;
 
+      let actionsHtml = `
+        <button type="button" class="btn-send-request" id="btn-modal-adopt" style="margin-top: 0;">
+          Quero Adotar ${pet.name}
+        </button>
+      `;
+
+      if (canManage) {
+        actionsHtml += `
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 6px;">
+            <button type="button" class="btn-send-request" id="btn-modal-edit" style="background: #2B2D42; margin-top: 0;">
+              ✏️ Editar Pet
+            </button>
+            <button type="button" class="btn-send-request" id="btn-modal-delete" style="background: #D62828; margin-top: 0;">
+              🗑️ Excluir Pet
+            </button>
+          </div>
+        `;
+      }
+
+      detailActions.innerHTML = actionsHtml;
       modalDetail.style.display = 'flex';
+
+      // Ação Adotar
+      const btnAdopt = detailActions.querySelector('#btn-modal-adopt');
+      if (btnAdopt) {
+        btnAdopt.addEventListener('click', () => {
+          modalDetail.style.display = 'none';
+          if (onNavigate) onNavigate('requests');
+        });
+      }
+
+      // Ação Editar
+      const btnEdit = detailActions.querySelector('#btn-modal-edit');
+      if (btnEdit) {
+        btnEdit.addEventListener('click', () => {
+          modalDetail.style.display = 'none';
+          container.querySelector('#edit-pet-id').value = pet.id;
+          container.querySelector('#edit-pet-name').value = pet.name;
+          container.querySelector('#edit-pet-photo').value = pet.photoUrl;
+          container.querySelector('#edit-pet-species').value = pet.species;
+          container.querySelector('#edit-pet-age').value = pet.age;
+          container.querySelector('#edit-pet-sex').value = pet.sex;
+          container.querySelector('#edit-pet-size').value = pet.size;
+          container.querySelector('#edit-pet-desc').value = pet.description;
+          modalEdit.style.display = 'flex';
+        });
+      }
+
+      // Ação Excluir
+      const btnDelete = detailActions.querySelector('#btn-modal-delete');
+      if (btnDelete) {
+        btnDelete.addEventListener('click', () => {
+          if (confirm(`Tem certeza que deseja excluir permanentemente o pet "${pet.name}"?`)) {
+            store.deleteAnimal(pet.id);
+            modalDetail.style.display = 'none';
+            alert('Pet excluído com sucesso!');
+            renderAnimalsView(container, onNavigate);
+          }
+        });
+      }
     });
   });
 
-  if (btnCloseDetail) {
-    btnCloseDetail.addEventListener('click', () => modalDetail.style.display = 'none');
-  }
+  // Salvar Edição do Pet
+  if (formEdit) {
+    formEdit.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const id = container.querySelector('#edit-pet-id').value;
+      const updated = {
+        name: container.querySelector('#edit-pet-name').value.trim(),
+        photoUrl: container.querySelector('#edit-pet-photo').value.trim(),
+        species: container.querySelector('#edit-pet-species').value,
+        age: container.querySelector('#edit-pet-age').value.trim(),
+        sex: container.querySelector('#edit-pet-sex').value,
+        size: container.querySelector('#edit-pet-size').value,
+        description: container.querySelector('#edit-pet-desc').value.trim()
+      };
 
-  if (btnAdoptModal) {
-    btnAdoptModal.addEventListener('click', () => {
-      modalDetail.style.display = 'none';
-      if (onNavigate) onNavigate('requests');
+      store.updateAnimal(id, updated);
+      modalEdit.style.display = 'none';
+      alert('Dados do animal atualizados com sucesso!');
+      renderAnimalsView(container, onNavigate);
     });
   }
 
-  // Modal Adicionar Pet
-  const modal = container.querySelector('#modal-add-pet-animals');
-  const btnOpen = container.querySelector('#btn-open-add-pet-animals');
-  const btnEmpty = container.querySelector('#btn-empty-add-animals');
-  const btnClose = container.querySelector('#btn-close-pet-modal-animals');
-  const form = container.querySelector('#form-new-pet-animals');
+  // Cadastro de Novo Animal
+  const modalAdd = container.querySelector('#modal-add-pet-animals');
+  const btnOpenAdd = container.querySelector('#btn-open-add-pet-animals');
+  const btnEmptyAdd = container.querySelector('#btn-empty-add-animals');
+  const btnCloseAdd = container.querySelector('#btn-close-pet-modal-animals');
+  const formAdd = container.querySelector('#form-new-pet-animals');
 
-  const openM = () => { if (modal) modal.style.display = 'flex'; };
-  const closeM = () => { if (modal) modal.style.display = 'none'; };
+  if (btnOpenAdd) btnOpenAdd.addEventListener('click', () => modalAdd.style.display = 'flex');
+  if (btnEmptyAdd) btnEmptyAdd.addEventListener('click', () => modalAdd.style.display = 'flex');
+  if (btnCloseAdd) btnCloseAdd.addEventListener('click', () => modalAdd.style.display = 'none');
 
-  if (btnOpen) btnOpen.addEventListener('click', openM);
-  if (btnEmpty) btnEmpty.addEventListener('click', openM);
-  if (btnClose) btnClose.addEventListener('click', closeM);
-
-  if (form) {
-    form.addEventListener('submit', (e) => {
+  if (formAdd) {
+    formAdd.addEventListener('submit', (e) => {
       e.preventDefault();
       const statusInicial = isAdmin ? "Disponível" : "Pendente de Aprovação";
       
@@ -246,7 +365,7 @@ export function renderAnimalsView(container, onNavigate) {
       };
 
       store.addAnimal(newAnimal);
-      closeM();
+      modalAdd.style.display = 'none';
       alert(isAdmin ? "Animal publicado com sucesso!" : "Animal cadastrado! Ele já está no seu Perfil e aguarda aprovação da ONG.");
       renderAnimalsView(container, onNavigate);
     });

@@ -17,14 +17,12 @@
       }
     ];
 
-    // Auto-exclusão: filtra campanhas expiradas (mais de 1 dia após o evento)
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
     initialNews = initialNews.filter(item => {
       if (!item.eventDate) return true;
       const eventD = new Date(item.eventDate + 'T23:59:59');
-      // Adiciona 1 dia de tolerância após a data do evento
       eventD.setDate(eventD.getDate() + 1);
       return today <= eventD;
     });
@@ -77,6 +75,19 @@
 
   addAnimal(newAnimal) {
     this.setState({ animals: [newAnimal, ...this.state.animals] });
+  }
+
+  updateAnimal(id, updatedData) {
+    const updated = this.state.animals.map(pet => {
+      if (pet.id === id) return { ...pet, ...updatedData };
+      return pet;
+    });
+    this.setState({ animals: updated });
+  }
+
+  deleteAnimal(id) {
+    const updated = this.state.animals.filter(pet => pet.id !== id);
+    this.setState({ animals: updated });
   }
 
   updateAnimalStatus(id, newStatus) {

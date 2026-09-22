@@ -53,7 +53,7 @@ export function renderProfileView(container, onLogout) {
         `}
       </div>
 
-      <!-- SEÇÃO MINIMIZÁVEL: Meus Animais para Doação -->
+      <!-- SEÇÃO MINIMIZÁVEL: Meus Animais para Doação (com Editar e Excluir) -->
       ${!isGuest ? `
         <div class="accordion-item" id="acc-my-pets" style="margin-bottom: 16px; border-radius: var(--radius-md); border: 1px solid var(--border-light); background: var(--bg-surface); overflow: hidden; box-shadow: var(--shadow-card);">
           <div class="accordion-header" id="header-my-pets" style="padding: 14px 16px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; user-select: none;">
@@ -66,12 +66,12 @@ export function renderProfileView(container, onLogout) {
           <div class="accordion-content" id="content-my-pets" style="display: none; padding: 0 14px 14px; border-top: 1px dashed var(--border-light);">
             ${myPets.length === 0 ? `
               <div style="padding: 12px; text-align: center; font-size: 12px; color: var(--text-muted);">
-                ${isAdmin ? 'Nenhum animal cadastrado diretamente por este perfil.' : 'Você ainda não cadastrou nenhum animal para doação.'}
+                Você ainda não cadastrou nenhum animal para doação.
               </div>
             ` : `
               <div style="margin-top: 10px;">
                 ${myPets.map(pet => `
-                  <div class="request-card" style="margin-bottom: 8px; background: #FFFDFB;">
+                  <div class="request-card" style="margin-bottom: 10px; background: #FFFDFB;">
                     <div class="request-card-header">
                       <span class="request-pet-name">🐾 ${pet.name}</span>
                       <span class="status-badge ${pet.status === 'Disponível' || pet.status === 'Aprovado' ? 'status-aprovado' : 'status-pendente'}">
@@ -81,6 +81,16 @@ export function renderProfileView(container, onLogout) {
                     <div class="request-detail-line"><strong>Espécie e Sexo:</strong> ${pet.species} • ${pet.sex} (${pet.age})</div>
                     <div class="request-detail-line"><strong>Status:</strong> ${pet.status === 'Disponível' || pet.status === 'Aprovado' ? '✅ Aprovado e visível' : '⏳ Aguardando aprovação da ONG'}</div>
                     <div class="request-detail-line"><strong>Data:</strong> ${pet.date}</div>
+
+                    <!-- Botões Rápidos de Gestão do Pet no Perfil -->
+                    <div style="display: flex; gap: 8px; margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--border-light);">
+                      <button type="button" class="btn-edit-pet-profile" data-pet-id="${pet.id}" style="flex: 1; background: #2B2D42; color: white; padding: 6px; font-size: 12px; font-weight: 700; border-radius: var(--radius-sm);">
+                        ✏️ Editar
+                      </button>
+                      <button type="button" class="btn-delete-pet-profile" data-pet-id="${pet.id}" data-pet-name="${pet.name}" style="flex: 1; background: #D62828; color: white; padding: 6px; font-size: 12px; font-weight: 700; border-radius: var(--radius-sm);">
+                        🗑️ Excluir
+                      </button>
+                    </div>
                   </div>
                 `).join('')}
               </div>
@@ -153,7 +163,7 @@ export function renderProfileView(container, onLogout) {
       </button>
     </div>
 
-    <!-- Modal Editar Dados -->
+    <!-- Modal Editar Dados do Usuário -->
     ${!isGuest ? `
       <div id="modal-edit-profile" class="modal-backdrop" style="display: none;">
         <div class="modal-sheet">
@@ -191,9 +201,61 @@ export function renderProfileView(container, onLogout) {
         </div>
       </div>
     ` : ''}
+
+    <!-- Modal Editar Pet (no Perfil) -->
+    <div id="modal-edit-pet-profile" class="modal-backdrop" style="display: none;">
+      <div class="modal-sheet">
+        <div class="modal-header">
+          <h3>Editar Animal</h3>
+          <button class="modal-close-btn" id="btn-close-edit-pet-p">✕</button>
+        </div>
+        <form id="form-edit-pet-p">
+          <input type="hidden" id="edit-p-id">
+          <div class="form-group-field">
+            <label>Nome do Animal *</label>
+            <input type="text" id="edit-p-name" required>
+          </div>
+          <div class="form-group-field">
+            <label>URL da Foto Real *</label>
+            <input type="url" id="edit-p-photo" required>
+          </div>
+          <div class="form-group-field">
+            <label>Espécie *</label>
+            <select id="edit-p-species" required>
+              <option value="Cachorro">Cachorro</option>
+              <option value="Gato">Gato</option>
+              <option value="Outro">Outro</option>
+            </select>
+          </div>
+          <div class="form-group-field">
+            <label>Idade e Sexo *</label>
+            <div style="display: flex; gap: 8px;">
+              <input type="text" id="edit-p-age" required style="flex: 1;">
+              <select id="edit-p-sex" required style="flex: 1;">
+                <option value="Macho">Macho</option>
+                <option value="Fêmea">Fêmea</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group-field">
+            <label>Porte *</label>
+            <select id="edit-p-size" required>
+              <option value="Pequeno">Pequeno</option>
+              <option value="Médio">Médio</option>
+              <option value="Grande">Grande</option>
+            </select>
+          </div>
+          <div class="form-group-field">
+            <label>História / Cuidados / Castrado? *</label>
+            <textarea id="edit-p-desc" rows="3" required style="resize:none;"></textarea>
+          </div>
+          <button type="submit" class="btn-send-request" style="margin-top: 12px;">Salvar Alterações</button>
+        </form>
+      </div>
+    </div>
   `;
 
-  // Minimizar / Expandir Meus Animais
+  // Sanfona Meus Animais
   const headerMyPets = container.querySelector('#header-my-pets');
   const contentMyPets = container.querySelector('#content-my-pets');
   const arrowMyPets = container.querySelector('#arrow-my-pets');
@@ -206,6 +268,65 @@ export function renderProfileView(container, onLogout) {
       arrowMyPets.style.color = isVisible ? 'var(--text-muted)' : 'var(--color-primary)';
     });
   }
+
+  // Modais de Edição de Pet pelo Perfil
+  const modalEditPetP = container.querySelector('#modal-edit-pet-profile');
+  const btnCloseEditPetP = container.querySelector('#btn-close-edit-pet-p');
+  const formEditPetP = container.querySelector('#form-edit-pet-p');
+
+  if (btnCloseEditPetP) btnCloseEditPetP.addEventListener('click', () => modalEditPetP.style.display = 'none');
+
+  container.querySelectorAll('.btn-edit-pet-profile').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const petId = btn.dataset.petId;
+      const pet = allAnimals.find(p => p.id === petId);
+      if (!pet) return;
+
+      container.querySelector('#edit-p-id').value = pet.id;
+      container.querySelector('#edit-p-name').value = pet.name;
+      container.querySelector('#edit-p-photo').value = pet.photoUrl;
+      container.querySelector('#edit-p-species').value = pet.species;
+      container.querySelector('#edit-p-age').value = pet.age;
+      container.querySelector('#edit-p-sex').value = pet.sex;
+      container.querySelector('#edit-p-size').value = pet.size;
+      container.querySelector('#edit-p-desc').value = pet.description;
+
+      modalEditPetP.style.display = 'flex';
+    });
+  });
+
+  if (formEditPetP) {
+    formEditPetP.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const id = container.querySelector('#edit-p-id').value;
+      const updated = {
+        name: container.querySelector('#edit-p-name').value.trim(),
+        photoUrl: container.querySelector('#edit-p-photo').value.trim(),
+        species: container.querySelector('#edit-p-species').value,
+        age: container.querySelector('#edit-p-age').value.trim(),
+        sex: container.querySelector('#edit-p-sex').value,
+        size: container.querySelector('#edit-p-size').value,
+        description: container.querySelector('#edit-p-desc').value.trim()
+      };
+      store.updateAnimal(id, updated);
+      modalEditPetP.style.display = 'none';
+      alert('Animal atualizado com sucesso!');
+      renderProfileView(container, onLogout);
+    });
+  }
+
+  // Exclusão de Pet no Perfil
+  container.querySelectorAll('.btn-delete-pet-profile').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const petId = btn.dataset.petId;
+      const petName = btn.dataset.petName;
+      if (confirm(`Tem certeza que deseja excluir o animal "${petName}"?`)) {
+        store.deleteAnimal(petId);
+        alert('Animal excluído com sucesso!');
+        renderProfileView(container, onLogout);
+      }
+    });
+  });
 
   if (isGuest) {
     container.querySelector('#btn-guest-register-now').addEventListener('click', () => {
